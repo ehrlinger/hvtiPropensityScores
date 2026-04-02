@@ -1,0 +1,109 @@
+# Propensity Score Overlap and Positivity Diagnostics
+
+Examines the propensity score (PS) distribution for potential positivity
+violations – regions of covariate space where the probability of
+receiving one treatment is near zero – and quantifies the common support
+region.
+
+## Usage
+
+``` r
+sa_overlap(
+  x,
+  score_col = "prob_t",
+  treatment_col = "tavr",
+  trim_threshold = 0.05
+)
+```
+
+## Arguments
+
+- x:
+
+  A `ps_data` object **or** a plain data frame.
+
+- score_col:
+
+  Name of the propensity score column. Taken from `x$meta$score_col`
+  when `x` is a `ps_data` object. Default `"prob_t"`.
+
+- treatment_col:
+
+  Name of the binary treatment column (0/1). Taken from
+  `x$meta$treatment_col` when `x` is a `ps_data`
+  object`. Default `"tavr"\`.
+
+- trim_threshold:
+
+  Numeric in (0, 0.5). PS values below this threshold or above
+  `1 - trim_threshold` are flagged as near-positivity violations.
+  Default `0.05`.
+
+## Value
+
+A list with:
+
+- `$summary`:
+
+  Data frame: one row per treatment group with `group`, `n`, `ps_min`,
+  `ps_q25`, `ps_median`, `ps_mean`, `ps_q75`, `ps_max`.
+
+- `$overlap_region`:
+
+  Named numeric vector: `lower` and `upper` bounds of the empirical
+  common support region.
+
+- `$outside_overlap`:
+
+  Data frame: `group`, `n_outside`, `pct_outside` – patients whose PS is
+  outside the overlap region.
+
+- `$positivity_flags`:
+
+  Data frame: `group`, `n_near_zero` (PS \< `trim_threshold`),
+  `n_near_one` (PS \> `1 - trim_threshold`), `pct_near_zero`,
+  `pct_near_one`.
+
+## Details
+
+The function reports:
+
+- PS summary statistics by treatment group.
+
+- The empirical overlap region: \[max(min_treated, min_control),
+  min(max_treated, max_control)\].
+
+- The proportion of each group whose PS lies outside the overlap region.
+
+- The number and proportion of patients with PS below `trim_threshold`
+  or above `1 - trim_threshold` (near-positivity-violation flags).
+
+## See also
+
+[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md),
+[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_rosenbaum.md),
+[`sa_evalue()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_evalue.md),
+[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_trim_sweep.md)
+
+## Examples
+
+``` r
+dta <- sample_ps_data(n = 400, seed = 7)
+res <- sa_overlap(dta, score_col = "prob_t", treatment_col = "tavr")
+res$overlap_region
+#>  lower  upper 
+#> 0.0856 0.9082 
+res$positivity_flags
+#>     group n_near_zero n_near_one pct_near_zero pct_near_one
+#> 1 control           1          0           0.2          0.0
+#> 2 treated           0          2           0.0          0.5
+
+# From a ps_match object
+m   <- ps_match(dta)
+res <- sa_overlap(m)
+res$outside_overlap
+#>     group n_outside pct_outside
+#> 1 control        11         2.8
+#> 2 treated        19         4.8
+```
