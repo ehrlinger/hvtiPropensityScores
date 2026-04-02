@@ -7,44 +7,73 @@
 #' hvtiPropensityScores: Propensity Score Methods for Cardiac Surgery Studies
 #'
 #' @description
-#' Provides functions for propensity score analysis used in cardiac surgery
-#' comparative-effectiveness research.  Supports two balancing strategies:
+#' Provides functions for propensity score and balancing score analysis used
+#' in cardiac surgery comparative-effectiveness research.  Translates the
+#' Cleveland Clinic HVTI SAS template library into a consistent R workflow.
 #'
-#' - **Nearest-neighbour matching** (`ps_match`): 1:1 greedy matching without
-#'   replacement on the propensity score, with optional caliper.
-#' - **Inverse-probability-of-treatment weighting** (`ps_weight`): IPTW weights
-#'   for the ATE, ATT, or ATC estimand, with optional stabilisation and
-#'   winsorisation.
+#' **Step 1 — estimate scores** (new in this version):
+#' - [ps_logistic()] — binary treatment propensity score (logistic regression;
+#'   supports multiply-imputed data via a stacked data frame).
+#' - [ps_ordinal()] — ordered treatment propensity score (proportional-odds
+#'   model via `MASS::polr`; equivalent to SAS `PROC LOGISTIC` default for
+#'   ordinal responses).
+#' - [ps_nominal()] — nominal treatment propensity score (multinomial logistic
+#'   via `nnet::multinom`; equivalent to SAS `PROC LOGISTIC link=glogit`).
+#' - [bs_continuous()] — balancing score for a continuous exposure
+#'   (linear regression; equivalent to SAS `PROC REG` + `%grp` macro).
+#' - [bs_count()] — balancing score for a count exposure (negative-binomial
+#'   or Poisson regression; equivalent to SAS `PROC GENMOD dist=nb`).
 #'
-#' Both functions return a `ps_data` S3 object whose `$data` slot holds the
-#' original dataset with the match indicator or weight column appended, and
-#' whose `$tables` slot holds standardised mean difference (SMD) diagnostics
-#' compatible with [hvtiPlotR::hv_mirror_hist()] and
-#' [hvtiPlotR::hv_balance()].
+#' **Step 2 — balance and use scores**:
+#' - [ps_match()] — 1:1 nearest-neighbour matching on a pre-computed score.
+#'   Returns a `pair_id` column in `$data` for use with [sa_rosenbaum()].
+#' - [ps_weight()] — IPTW weights (ATE / ATT / ATC) from a pre-computed score.
 #'
-#' @section Typical workflow:
+#' **Step 3 — sensitivity analysis** (optional):
+#' - [sa_rosenbaum()] — Rosenbaum gamma bounds for matched analyses
+#'   (requires `rbounds`).
+#' - [sa_evalue()] — E-values (VanderWeele & Ding 2017); no extra dependency.
+#' - [sa_overlap()] — Overlap and positivity diagnostics on the PS distribution.
+#' - [sa_trim_sweep()] — IPTW trim-threshold sensitivity sweep.
+#'
+#' All functions return a `ps_data` S3 object whose `$data` slot holds the
+#' original dataset with score / weight columns appended, and whose `$tables`
+#' slot holds balance diagnostics compatible with [hvtiPlotR::hv_mirror_hist()]
+#' and [hvtiPlotR::hv_balance()].
+#'
+#' @section Typical two-step workflow (binary treatment):
 #' ```r
 #' library(hvtiPropensityScores)
 #'
-#' # Generate or load your data
-#' dta <- sample_ps_data(n = 500, seed = 42)
+#' # Step 1: estimate propensity score
+#' dta   <- sample_ps_data(n = 500, seed = 42)
+#' score <- ps_logistic(
+#'   tavr ~ age + female + ef + diabetes + hypertension,
+#'   data = dta
+#' )
+#' print(score)
 #'
-#' # --- Matching ---
-#' m   <- ps_match(dta)
-#' print(m)
-#' summary(m)
+#' # Step 2a: match on the estimated score
+#' m <- ps_match(score$data, score_col = score$meta$score_col)
 #' matched <- m$data[m$data$match == 1L, ]
 #'
-#' # --- Weighting ---
-#' w   <- ps_weight(dta, estimand = "ATE")
-#' print(w)
-#' summary(w)
+#' # Step 2b: or weight
+#' w <- ps_weight(score$data, score_col = score$meta$score_col)
 #' ```
 #'
 #' @seealso
+#' - [ps_logistic()] — binary propensity score estimation
+#' - [ps_ordinal()] — ordinal propensity score estimation
+#' - [ps_nominal()] — nominal propensity score estimation
+#' - [bs_continuous()] — continuous-outcome balancing score
+#' - [bs_count()] — count-outcome balancing score
 #' - [ps_match()] — nearest-neighbour 1:1 matching
 #' - [ps_weight()] — IPTW weighting (ATE / ATT / ATC)
-#' - [sample_ps_data()] — reproducible synthetic dataset for examples / tests
+#' - [sa_rosenbaum()] — Rosenbaum sensitivity bounds (matched analyses)
+#' - [sa_evalue()] — E-value sensitivity analysis
+#' - [sa_overlap()] — overlap and positivity diagnostics
+#' - [sa_trim_sweep()] — IPTW trim-threshold sensitivity sweep
+#' - [sample_ps_data()] — synthetic dataset for examples / tests
 #' - [is_ps_data()] — predicate for `ps_data` objects
 #'
 #' @name hvtiPropensityScores-package

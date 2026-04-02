@@ -48,11 +48,14 @@
 #'
 #' @return An object of class `c("ps_match", "ps_data")` with:
 #' \describe{
-#'   \item{`$data`}{The full input data frame with `match_col` appended.
-#'     Filter to `match == 1` to obtain the matched subset.}
+#'   \item{`$data`}{The full input data frame with `match_col` and `pair_id`
+#'     appended.  `match_col` is `1` for matched patients and `0` otherwise.
+#'     `pair_id` is an integer identifying which matched pair each patient
+#'     belongs to (`NA` for unmatched patients).  Filter to `match == 1` to
+#'     obtain the matched subset.}
 #'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `id_col`,
-#'     `match_col`, `caliper`, `method`, `n_total`, `n_matched`,
-#'     `n_unmatched`.}
+#'     `match_col`, `pair_id_col`, `caliper`, `method`, `n_total`,
+#'     `n_matched`, `n_unmatched`.}
 #'   \item{`$tables`}{Named list: `smd_before`, `smd_after`,
 #'     `group_counts_before`, `group_counts_after`.}
 #' }
@@ -142,6 +145,14 @@ ps_match <- function(data,
   out[[match_col]] <- 0L
   out[[match_col]][c(pair_t, pair_c)] <- 1L
 
+  # Pair identifier: integer 1..n_pairs for matched rows; NA for unmatched
+  out[["pair_id"]] <- NA_integer_
+  if (length(pair_t) > 0L) {
+    pair_ids <- seq_along(pair_t)
+    out[["pair_id"]][pair_t] <- pair_ids
+    out[["pair_id"]][pair_c] <- pair_ids
+  }
+
   # ---- SMD diagnostics ---------------------------------------------------
   if (is.null(covariates)) {
     covariates <- setdiff(
@@ -175,6 +186,7 @@ ps_match <- function(data,
       score_col     = score_col,
       id_col        = id_col,
       match_col     = match_col,
+      pair_id_col   = "pair_id",
       caliper       = caliper,
       method        = "nearest-neighbour 1:1",
       n_total       = nrow(data),

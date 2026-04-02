@@ -1,0 +1,707 @@
+###############################################################################
+## ps-score.R
+##
+## Propensity score estimation via logistic regression (binary, ordinal,
+## and nominal treatment).
+##
+## Ports the model-fitting step from four SAS templates:
+##   tp.lm.logistic_propensity_score.sas        (binary treatment, with MI)
+##   tp.lm.logistic_propensity_score.nomi.sas   (binary treatment, no MI)
+##   tp.lm.logistic_propensity_ordinal.sas      (ordered treatment)
+##   tp.lm.logistic_propensity.polytomous.sas   (nominal treatment)
+##
+## Each function fits the propensity model and returns a ps_data subclass
+## whose $data slot is the original dataset with probability column(s)
+## appended.  The scored data frame can then be passed directly to
+## ps_match() or ps_weight().
+##
+## Multiple imputation (MI) is supported by all three functions via a
+## stacked "long" data frame with an imputation-index column
+## (e.g. mice::complete(mids, action = "long")).  The model is fit
+## separately on each imputed dataset, and per-patient predictions are
+## averaged across imputations — mirroring the SAS approach of
+## BY _IMPUTATION_ followed by PROC SUMMARY mean=.
+##
+## Functions:
+##   ps_logistic()  -- binary treatment (0/1)
+##   ps_ordinal()   -- ordered treatment (2+ levels)
+##   ps_nominal()   -- nominal (unordered) treatment (2+ levels)
+###############################################################################
+
+
+# ---------------------------------------------------------------------------
+# Internal: rank-based quintile / decile assignment
+# ---------------------------------------------------------------------------
+
+#' Assign rank-based quintile and decile columns
+#'
+#' Mirrors the SAS logic:
+#'   proc sort by _propen;
+#'   quintile = int(_n_ / (nobs/5)) + 1;  if quintile > 5 then quintile = 5;
+#' @keywords internal
+.assign_ps_strata <- function(score) {
+  n   <- length(score)
+  rnk <- rank(score, ties.method = "first")
+  list(
+    quintile = pmin(ceiling(rnk * 5L  / n), 5L),
+    decile   = pmin(ceiling(rnk * 10L / n), 10L)
+  )
+}
+
+
+# ---------------------------------------------------------------------------
+# Internal: MI loop helper
+# ---------------------------------------------------------------------------
+
+#' Run a fitting function over each imputation and return averaged predictions
+#'
+#' @param data           Stacked MI data frame.
+#' @param imputation_col Column name holding the imputation index.
+#' @param id_col         Column name holding the patient ID.
+#' @param fit_fn         Function (sub_df) -> fit object.
+#' @param pred_fn        Function (fit, sub_df) -> numeric vector / matrix of
+#'   predicted values.  Must return results in the same row order as sub_df.
+#' @return A list with `preds` (averaged predictions, same type as pred_fn
+#'   output for one dataset), `base_data` (first imputation, imputation col
+#'   removed), and `n_imp`.
+#' @keywords internal
+.mi_average <- function(data, imputation_col, id_col, fit_fn, pred_fn) {
+  imputations <- sort(unique(data[[imputation_col]]))
+  if (length(imputations) < 2L) {
+    rlang::abort(
+      sprintf(
+        "Column `%s` must contain at least 2 distinct imputation indices.",
+        imputation_col
+      ),
+      call. = FALSE
+    )
+  }
+
+  id_ref    <- NULL
+  pred_list <- vector("list", length(imputations))
+
+  for (j in seq_along(imputations)) {
+    imp <- imputations[j]
+    sub <- data[data[[imputation_col]] == imp, , drop = FALSE]
+    fit <- fit_fn(sub)
+    p   <- pred_fn(fit, sub)
+
+    if (j == 1L) {
+      id_ref        <- sub[[id_col]]
+      pred_list[[j]] <- p
+    } else {
+      ord            <- match(id_ref, sub[[id_col]])
+      pred_list[[j]] <- if (is.matrix(p)) p[ord, , drop = FALSE] else p[ord]
+    }
+  }
+
+  # Average: vector case
+  if (is.numeric(pred_list[[1L]]) && !is.matrix(pred_list[[1L]])) {
+    pred_mat <- do.call(cbind, pred_list)
+    preds    <- rowMeans(pred_mat, na.rm = TRUE)
+  } else {
+    # Matrix case (ordinal / nominal — k columns)
+    pred_arr <- simplify2array(pred_list)   # n x k x m
+    preds    <- apply(pred_arr, c(1L, 2L), mean, na.rm = TRUE)
+    colnames(preds) <- colnames(pred_list[[1L]])
+  }
+
+  # Base data = first imputed dataset, imputation column dropped
+  base_data <- data[data[[imputation_col]] == imputations[1L], , drop = FALSE]
+  ord_base  <- match(id_ref, base_data[[id_col]])
+  base_data <- base_data[ord_base, , drop = FALSE]
+  base_data[[imputation_col]] <- NULL
+  rownames(base_data) <- NULL
+
+  list(preds = preds, base_data = base_data, n_imp = length(imputations))
+}
+
+
+# ---------------------------------------------------------------------------
+# ps_logistic
+# ---------------------------------------------------------------------------
+
+#' Estimate propensity scores via binary logistic regression
+#'
+#' Fits `stats::glm(..., family = binomial())` and appends the estimated
+#' propensity score, its logit, and a matching weight to the dataset.
+#' Supports multiply-imputed data in a stacked "long" format.
+#'
+#' When `imputation_col` is supplied, the model is fit separately on each
+#' imputed dataset; predicted probabilities are averaged per patient across
+#' imputations (Rubin's combination rule for predictions), and the first
+#' imputed dataset's covariate values form the base output data frame.
+#' This mirrors the SAS template workflow of
+#' `PROC LOGISTIC ... BY _IMPUTATION_` followed by `PROC SUMMARY mean=`.
+#'
+#' The **matching weight** appended as `weight_col` is
+#' `min(p, 1-p) / (p * trt + (1-p) * (1-trt))`,
+#' which equals the `mt_wt` column produced in the SAS templates (Li &
+#' Greene, 2013).  It is the ATM (average treatment effect among the
+#' matched) estimand weight and is used as input to [ps_match()] or
+#' [ps_weight()].
+#'
+#' @param formula        A formula with the binary treatment on the
+#'   left-hand side, e.g. `tavr ~ age + female + ef + diabetes`.
+#' @param data           A data frame.  If `imputation_col` is set, `data`
+#'   must be a stacked "long" MI data frame as produced by
+#'   `mice::complete(mids, action = "long")`.
+#' @param treatment_col  Name of the binary treatment column (0/1 or
+#'   logical).  If `NULL` (default), extracted from the LHS of `formula`.
+#' @param id_col         Patient identifier column.  Required when
+#'   `imputation_col` is set.  Default `"id"`.
+#' @param imputation_col Name of the imputation-index column in a stacked
+#'   MI data frame.  `NULL` (default) means a single complete dataset is
+#'   supplied.
+#' @param score_col      Output column name for the propensity score
+#'   (probability of treatment).  Default `"prob_t"`.
+#' @param logit_col      Output column name for the logit of the propensity
+#'   score, `log(p / (1 - p))`.  Default `"logit_t"`.
+#' @param weight_col     Output column name for the matching weight.
+#'   Default `"mt_wt"`.
+#' @param covariates     Character vector of covariate column names for SMD
+#'   balance diagnostics.  If `NULL` (default), all numeric columns other
+#'   than `treatment_col`, `score_col`, `logit_col`, `weight_col`,
+#'   `id_col`, `"quintile"`, and `"decile"` are used.
+#'
+#' @return An object of class `c("ps_logistic", "ps_data")` with:
+#' \describe{
+#'   \item{`$data`}{The base data frame with `score_col`, `logit_col`,
+#'     `weight_col`, `quintile`, and `decile` columns appended.}
+#'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
+#'     `imputation_col`, `score_col`, `logit_col`, `weight_col`, `method`,
+#'     `n_imputations`, `n_total`.}
+#'   \item{`$tables`}{Named list: `smd`, `group_counts`.}
+#' }
+#'
+#' @seealso [ps_match()], [ps_weight()], [ps_ordinal()], [ps_nominal()],
+#'   [sample_ps_data()]
+#'
+#' @examples
+#' dta <- sample_ps_data(n = 200, seed = 42)
+#'
+#' # Single complete dataset
+#' obj <- ps_logistic(
+#'   tavr ~ age + female + ef + diabetes + hypertension,
+#'   data = dta
+#' )
+#' print(obj)
+#' summary(obj)
+#'
+#' # Pass the scored data to ps_match()
+#' matched <- ps_match(obj$data, score_col = obj$meta$score_col)
+#' nrow(matched$data[matched$data$match == 1L, ])
+#'
+#' @export
+ps_logistic <- function(formula,
+                        data,
+                        treatment_col  = NULL,
+                        id_col         = "id",
+                        imputation_col = NULL,
+                        score_col      = "prob_t",
+                        logit_col      = "logit_t",
+                        weight_col     = "mt_wt",
+                        covariates     = NULL) {
+
+  # ---- Input validation ---------------------------------------------------
+  if (!inherits(formula, "formula")) {
+    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+  }
+  .check_df(data)
+
+  if (is.null(treatment_col)) {
+    treatment_col <- as.character(formula[[2L]])
+  }
+  .check_cols(data, treatment_col)
+  if (!is.null(id_col))         .check_cols(data, id_col)
+  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+  .check_binary(data, treatment_col)
+
+  # ---- Fit model(s) and obtain predicted probabilities --------------------
+  fit_fn  <- function(df) stats::glm(formula, data = df,
+                                     family = stats::binomial())
+  pred_fn <- function(fit, df) as.numeric(stats::predict(fit, type = "response"))
+
+  if (is.null(imputation_col)) {
+    fit       <- fit_fn(data)
+    probs     <- pred_fn(fit, data)
+    base_data <- data
+    n_imp     <- 1L
+  } else {
+    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
+    probs     <- mi$preds
+    base_data <- mi$base_data
+    n_imp     <- mi$n_imp
+  }
+
+  # ---- Append score columns -----------------------------------------------
+  trt <- as.integer(base_data[[treatment_col]])
+
+  base_data[[score_col]]  <- probs
+  base_data[[logit_col]]  <- log(probs / (1 - probs))
+  base_data[[weight_col]] <- pmin(probs, 1 - probs) /
+    (probs * trt + (1 - probs) * (1L - trt))
+
+  # ---- Quintile / decile strata -------------------------------------------
+  strata <- .assign_ps_strata(probs)
+  base_data[["quintile"]] <- strata$quintile
+  base_data[["decile"]]   <- strata$decile
+
+  # ---- SMD diagnostics ----------------------------------------------------
+  reserved <- c(treatment_col, score_col, logit_col, weight_col,
+                id_col, "quintile", "decile")
+  if (is.null(covariates)) {
+    covariates <- setdiff(
+      names(base_data)[vapply(base_data, is.numeric, logical(1L))],
+      reserved
+    )
+  }
+  smd_tbl <- .smd_table(base_data, treatment_col, covariates)
+
+  group_counts <- data.frame(
+    group = c("control", "treated"),
+    n     = c(sum(trt == 0L), sum(trt == 1L))
+  )
+
+  # ---- Assemble object ----------------------------------------------------
+  new_ps_data(
+    data     = base_data,
+    meta     = list(
+      formula        = formula,
+      treatment_col  = treatment_col,
+      id_col         = id_col,
+      imputation_col = imputation_col,
+      score_col      = score_col,
+      logit_col      = logit_col,
+      weight_col     = weight_col,
+      method         = if (is.null(imputation_col)) "logistic"
+                       else "logistic-MI",
+      n_imputations  = n_imp,
+      n_total        = nrow(base_data)
+    ),
+    tables   = list(
+      smd          = smd_tbl,
+      group_counts = group_counts
+    ),
+    subclass = "ps_logistic"
+  )
+}
+
+
+#' @export
+print.ps_logistic <- function(x, ...) {
+  cat("<ps_logistic>\n")
+  if (!is.null(x$meta$n_total))
+    cat(sprintf("  N total     : %d\n", x$meta$n_total))
+  if (!is.null(x$meta$treatment_col))
+    cat(sprintf("  Treatment   : %s\n", x$meta$treatment_col))
+  if (!is.null(x$meta$score_col))
+    cat(sprintf("  PS column   : %s\n", x$meta$score_col))
+  if (!is.null(x$meta$weight_col))
+    cat(sprintf("  Weight col  : %s\n", x$meta$weight_col))
+  if (!is.null(x$meta$method)) {
+    method_str <- x$meta$method
+    if (!is.null(x$meta$n_imputations) && x$meta$n_imputations > 1L)
+      method_str <- sprintf("%s (%d imputations)", method_str,
+                            x$meta$n_imputations)
+    cat(sprintf("  Method      : %s\n", method_str))
+  }
+  if (length(x$tables) > 0L)
+    cat("  Tables      :", paste(names(x$tables), collapse = ", "), "\n")
+  invisible(x)
+}
+
+
+# ---------------------------------------------------------------------------
+# ps_ordinal
+# ---------------------------------------------------------------------------
+
+#' Estimate propensity scores via ordinal (cumulative logit) logistic
+#' regression
+#'
+#' Fits a proportional-odds cumulative logit model via [MASS::polr()] for an
+#' ordered treatment variable and appends one probability column per
+#' treatment level to the dataset.  The model is equivalent to the default
+#' `PROC LOGISTIC` behaviour for ordinal responses in SAS.
+#'
+#' When `imputation_col` is supplied, models are fit on each imputed dataset
+#' separately and per-level probabilities are averaged per patient across
+#' imputations.
+#'
+#' @param formula          A formula with the ordered factor treatment on the
+#'   LHS, e.g. `nyha_grp ~ age + female + ef`.  The response is coerced to
+#'   an ordered factor if it is not already one.
+#' @param data             A data frame (single or stacked MI).
+#' @param treatment_col    Name of the ordinal treatment column.  `NULL`
+#'   (default) extracts from `formula`.
+#' @param id_col           Patient identifier column.  Default `"id"`.
+#' @param imputation_col   Imputation-index column for stacked MI data.
+#'   `NULL` (default) assumes a single complete dataset.
+#' @param score_col_prefix Prefix for the per-level output columns.  Columns
+#'   are named `<prefix>_<level>` for each level of the treatment.
+#'   Default `"prob"`.
+#' @param covariates       Covariate columns for diagnostics.
+#'
+#' @return An object of class `c("ps_ordinal", "ps_data")` with:
+#' \describe{
+#'   \item{`$data`}{Base data frame with one `prob_<level>` column per
+#'     treatment level.}
+#'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
+#'     `imputation_col`, `score_cols`, `levels`, `method`,
+#'     `n_imputations`, `n_total`.}
+#'   \item{`$tables`}{Named list: `group_counts`.}
+#' }
+#'
+#' @section Package dependency:
+#'   Requires the \pkg{MASS} package (a recommended package shipped with
+#'   base R).  Install with `install.packages("MASS")` if missing.
+#'
+#' @seealso [ps_logistic()], [ps_nominal()], [ps_match()]
+#'
+#' @examples
+#' \dontrun{
+#' dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+#' obj <- ps_ordinal(
+#'   nyha_grp ~ age + female + ef + diabetes,
+#'   data = dta
+#' )
+#' print(obj)
+#' head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
+#' }
+#'
+#' @export
+ps_ordinal <- function(formula,
+                       data,
+                       treatment_col    = NULL,
+                       id_col           = "id",
+                       imputation_col   = NULL,
+                       score_col_prefix = "prob",
+                       covariates       = NULL) {
+
+  if (!requireNamespace("MASS", quietly = TRUE)) {
+    rlang::abort(
+      paste0("`ps_ordinal()` requires the MASS package.\n",
+             "Install it with: install.packages(\"MASS\")"),
+      call. = FALSE
+    )
+  }
+
+  # ---- Input validation ---------------------------------------------------
+  if (!inherits(formula, "formula")) {
+    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+  }
+  .check_df(data)
+
+  if (is.null(treatment_col)) {
+    treatment_col <- as.character(formula[[2L]])
+  }
+  .check_cols(data, treatment_col)
+  if (!is.null(id_col))         .check_cols(data, id_col)
+  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+
+  # ---- Coerce response to ordered factor ----------------------------------
+  .as_ordered <- function(df, col) {
+    x <- df[[col]]
+    if (!is.ordered(x)) df[[col]] <- factor(x, ordered = TRUE)
+    df
+  }
+  data <- .as_ordered(data, treatment_col)
+  lvls <- levels(data[[treatment_col]])
+
+  if (length(lvls) < 2L) {
+    rlang::abort(
+      sprintf("Treatment column `%s` must have at least 2 levels.", treatment_col),
+      call. = FALSE
+    )
+  }
+
+  # ---- Fit function -------------------------------------------------------
+  fit_fn <- function(df) {
+    df <- .as_ordered(df, treatment_col)
+    MASS::polr(formula, data = df, Hess = FALSE)
+  }
+  pred_fn <- function(fit, df) {
+    p <- stats::predict(fit, type = "probs")
+    if (is.vector(p)) {
+      # Two-level: polr returns a vector; reshape to matrix
+      p <- cbind(1 - p, p)
+      colnames(p) <- lvls
+    }
+    p
+  }
+
+  # ---- Single or MI -------------------------------------------------------
+  if (is.null(imputation_col)) {
+    fit       <- fit_fn(data)
+    probs_mat <- pred_fn(fit, data)
+    base_data <- data
+    n_imp     <- 1L
+  } else {
+    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
+    probs_mat <- mi$preds
+    base_data <- mi$base_data
+    n_imp     <- mi$n_imp
+    # Re-coerce response in base_data (imputation col already removed)
+    base_data <- .as_ordered(base_data, treatment_col)
+  }
+
+  # ---- Append probability columns -----------------------------------------
+  score_cols <- paste0(score_col_prefix, "_", lvls)
+  for (i in seq_along(lvls)) {
+    base_data[[score_cols[i]]] <- as.numeric(probs_mat[, i])
+  }
+
+  # ---- Group counts -------------------------------------------------------
+  trt_vals     <- base_data[[treatment_col]]
+  group_counts <- as.data.frame(table(group = trt_vals),
+                                stringsAsFactors = FALSE)
+  names(group_counts) <- c("group", "n")
+
+  # ---- Assemble object ----------------------------------------------------
+  new_ps_data(
+    data     = base_data,
+    meta     = list(
+      formula          = formula,
+      treatment_col    = treatment_col,
+      id_col           = id_col,
+      imputation_col   = imputation_col,
+      score_cols       = score_cols,
+      score_col_prefix = score_col_prefix,
+      levels           = lvls,
+      method           = if (is.null(imputation_col)) "ordinal-logistic"
+                         else "ordinal-logistic-MI",
+      n_imputations    = n_imp,
+      n_total          = nrow(base_data)
+    ),
+    tables   = list(
+      group_counts = group_counts
+    ),
+    subclass = "ps_ordinal"
+  )
+}
+
+
+#' @export
+print.ps_ordinal <- function(x, ...) {
+  cat("<ps_ordinal>\n")
+  if (!is.null(x$meta$n_total))
+    cat(sprintf("  N total     : %d\n", x$meta$n_total))
+  if (!is.null(x$meta$treatment_col))
+    cat(sprintf("  Treatment   : %s (%d levels: %s)\n",
+                x$meta$treatment_col,
+                length(x$meta$levels),
+                paste(x$meta$levels, collapse = " < ")))
+  if (!is.null(x$meta$score_cols))
+    cat(sprintf("  Score cols  : %s\n",
+                paste(x$meta$score_cols, collapse = ", ")))
+  if (!is.null(x$meta$method)) {
+    method_str <- x$meta$method
+    if (!is.null(x$meta$n_imputations) && x$meta$n_imputations > 1L)
+      method_str <- sprintf("%s (%d imputations)", method_str,
+                            x$meta$n_imputations)
+    cat(sprintf("  Method      : %s\n", method_str))
+  }
+  if (length(x$tables) > 0L)
+    cat("  Tables      :", paste(names(x$tables), collapse = ", "), "\n")
+  invisible(x)
+}
+
+
+# ---------------------------------------------------------------------------
+# ps_nominal
+# ---------------------------------------------------------------------------
+
+#' Estimate propensity scores via nominal (generalised logit) logistic
+#' regression
+#'
+#' Fits a multinomial logistic regression model via [nnet::multinom()] for a
+#' nominal (unordered) treatment variable, equivalent to SAS
+#' `PROC LOGISTIC ... / link=glogit`.  One probability column per treatment
+#' level is appended to the dataset.
+#'
+#' When `imputation_col` is supplied, models are fit on each imputed dataset
+#' and per-level probabilities are averaged per patient across imputations.
+#'
+#' @param formula          A formula with the nominal treatment on the LHS,
+#'   e.g. `rtyp ~ age + female + ef + diabetes`.
+#' @param data             A data frame (single or stacked MI).
+#' @param treatment_col    Name of the nominal treatment column.  `NULL`
+#'   (default) extracts from `formula`.
+#' @param id_col           Patient identifier column.  Default `"id"`.
+#' @param imputation_col   Imputation-index column.  `NULL` (default) means
+#'   a single complete dataset.
+#' @param ref_level        Reference level for the multinomial model.  `NULL`
+#'   (default) uses the first factor level, matching `REF=first` in SAS.
+#' @param score_col_prefix Prefix for per-level output columns (`prob_<level>`
+#'   by default).  Default `"prob"`.
+#' @param trace            Logical.  If `FALSE` (default), suppresses
+#'   [nnet::multinom()] iteration messages.
+#' @param covariates       Covariate columns for diagnostics.
+#'
+#' @return An object of class `c("ps_nominal", "ps_data")` with:
+#' \describe{
+#'   \item{`$data`}{Base data frame with one `prob_<level>` column per
+#'     treatment level appended.}
+#'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
+#'     `imputation_col`, `score_cols`, `levels`, `ref_level`, `method`,
+#'     `n_imputations`, `n_total`.}
+#'   \item{`$tables`}{Named list: `group_counts`.}
+#' }
+#'
+#' @section Package dependency:
+#'   Requires \pkg{nnet} (a recommended R package, usually pre-installed).
+#'   Install with `install.packages("nnet")` if missing.
+#'
+#' @seealso [ps_logistic()], [ps_ordinal()], [ps_match()]
+#'
+#' @examples
+#' \dontrun{
+#' dta <- sample_ps_data_nominal(n = 300, seed = 42)
+#' obj <- ps_nominal(
+#'   rtyp ~ age + female + ef + diabetes,
+#'   data = dta
+#' )
+#' print(obj)
+#' head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
+#' }
+#'
+#' @export
+ps_nominal <- function(formula,
+                       data,
+                       treatment_col    = NULL,
+                       id_col           = "id",
+                       imputation_col   = NULL,
+                       ref_level        = NULL,
+                       score_col_prefix = "prob",
+                       trace            = FALSE,
+                       covariates       = NULL) {
+
+  if (!requireNamespace("nnet", quietly = TRUE)) {
+    rlang::abort(
+      paste0("`ps_nominal()` requires the nnet package.\n",
+             "Install it with: install.packages(\"nnet\")"),
+      call. = FALSE
+    )
+  }
+
+  # ---- Input validation ---------------------------------------------------
+  if (!inherits(formula, "formula")) {
+    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+  }
+  .check_df(data)
+
+  if (is.null(treatment_col)) {
+    treatment_col <- as.character(formula[[2L]])
+  }
+  .check_cols(data, treatment_col)
+  if (!is.null(id_col))         .check_cols(data, id_col)
+  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+
+  # ---- Coerce response to unordered factor --------------------------------
+  .as_nominal <- function(df, col, ref) {
+    x <- df[[col]]
+    if (!is.factor(x) || is.ordered(x)) df[[col]] <- factor(x)
+    if (!is.null(ref))                  df[[col]] <- stats::relevel(df[[col]], ref = ref)
+    df
+  }
+  data <- .as_nominal(data, treatment_col, ref_level)
+  lvls <- levels(data[[treatment_col]])
+
+  if (length(lvls) < 2L) {
+    rlang::abort(
+      sprintf("Treatment column `%s` must have at least 2 levels.", treatment_col),
+      call. = FALSE
+    )
+  }
+
+  # ---- Fit function -------------------------------------------------------
+  fit_fn <- function(df) {
+    df <- .as_nominal(df, treatment_col, ref_level)
+    nnet::multinom(formula, data = df, trace = trace)
+  }
+  pred_fn <- function(fit, df) {
+    p <- stats::predict(fit, type = "probs")
+    if (is.vector(p)) {
+      # Two-level case: multinom returns a vector of P(level 2)
+      p <- cbind(1 - p, p)
+    }
+    colnames(p) <- lvls
+    p
+  }
+
+  # ---- Single or MI -------------------------------------------------------
+  if (is.null(imputation_col)) {
+    fit       <- fit_fn(data)
+    probs_mat <- pred_fn(fit, data)
+    base_data <- data
+    n_imp     <- 1L
+  } else {
+    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
+    probs_mat <- mi$preds
+    base_data <- mi$base_data
+    n_imp     <- mi$n_imp
+    base_data <- .as_nominal(base_data, treatment_col, ref_level)
+  }
+
+  # ---- Append probability columns -----------------------------------------
+  score_cols <- paste0(score_col_prefix, "_", lvls)
+  for (i in seq_along(lvls)) {
+    base_data[[score_cols[i]]] <- as.numeric(probs_mat[, i])
+  }
+
+  # ---- Group counts -------------------------------------------------------
+  trt_vals     <- base_data[[treatment_col]]
+  group_counts <- as.data.frame(table(group = trt_vals),
+                                stringsAsFactors = FALSE)
+  names(group_counts) <- c("group", "n")
+
+  # ---- Assemble object ----------------------------------------------------
+  new_ps_data(
+    data     = base_data,
+    meta     = list(
+      formula          = formula,
+      treatment_col    = treatment_col,
+      id_col           = id_col,
+      imputation_col   = imputation_col,
+      score_cols       = score_cols,
+      score_col_prefix = score_col_prefix,
+      levels           = lvls,
+      ref_level        = lvls[1L],
+      method           = if (is.null(imputation_col)) "nominal-logistic"
+                         else "nominal-logistic-MI",
+      n_imputations    = n_imp,
+      n_total          = nrow(base_data)
+    ),
+    tables   = list(
+      group_counts = group_counts
+    ),
+    subclass = "ps_nominal"
+  )
+}
+
+
+#' @export
+print.ps_nominal <- function(x, ...) {
+  cat("<ps_nominal>\n")
+  if (!is.null(x$meta$n_total))
+    cat(sprintf("  N total     : %d\n", x$meta$n_total))
+  if (!is.null(x$meta$treatment_col))
+    cat(sprintf("  Treatment   : %s (%d levels)\n",
+                x$meta$treatment_col,
+                length(x$meta$levels)))
+  if (!is.null(x$meta$ref_level))
+    cat(sprintf("  Reference   : %s\n", x$meta$ref_level))
+  if (!is.null(x$meta$score_cols))
+    cat(sprintf("  Score cols  : %s\n",
+                paste(x$meta$score_cols, collapse = ", ")))
+  if (!is.null(x$meta$method)) {
+    method_str <- x$meta$method
+    if (!is.null(x$meta$n_imputations) && x$meta$n_imputations > 1L)
+      method_str <- sprintf("%s (%d imputations)", method_str,
+                            x$meta$n_imputations)
+    cat(sprintf("  Method      : %s\n", method_str))
+  }
+  if (length(x$tables) > 0L)
+    cat("  Tables      :", paste(names(x$tables), collapse = ", "), "\n")
+  invisible(x)
+}

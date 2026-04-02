@@ -210,7 +210,7 @@ The `$data` and `$tables` slots are designed for direct consumption by
 
 ```{r}
 #| label: mirror-hist-match
-#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+#| eval: false
 library(hvtiPlotR)
 
 mh <- hv_mirror_hist(
@@ -230,7 +230,7 @@ plot(mh) +
 
 ```{r}
 #| label: mirror-hist-weight
-#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+#| eval: false
 mh_wt <- hv_mirror_hist(
   data          = w_ate$data,
   x             = prob_t,

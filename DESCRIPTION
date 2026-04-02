@@ -28,6 +28,9 @@ Imports:
     rlang (>= 1.0.0)
 Suggests:
     knitr,
+    MASS,
+    nnet,
+    rbounds,
     testthat (>= 3.0.0),
     devtools,
     quarto,
