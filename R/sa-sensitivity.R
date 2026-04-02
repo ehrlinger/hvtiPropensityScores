@@ -137,11 +137,11 @@ sa_rosenbaum <- function(x,
   # ---- Wilcoxon signed-rank sensitivity analysis ---------------------------
   pair_mat <- cbind(trt_out, ctl_out)
 
-  res <- rbounds::wilc.sens(
-    x       = pair_mat,
-    Gamma   = gamma_max,
+  res <- rbounds::psens(
+    x        = pair_mat,
+    Gamma    = gamma_max,
     GammaInc = gamma_inc,
-    alpha   = alpha
+    alpha    = alpha
   )
 
   bounds <- data.frame(

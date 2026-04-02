@@ -42,6 +42,21 @@ reference:
     Synthetic datasets for examples and unit tests.
   contents:
   - sample_ps_data
+  - sample_ps_data_ordinal
+  - sample_ps_data_nominal
+  - sample_ps_data_count
+
+- title: "Propensity Score Estimation"
+  desc: >
+    Functions for estimating propensity scores and balancing scores from
+    raw patient data. Supports binary, ordinal, nominal, continuous, and
+    count outcomes, with optional multiple-imputation averaging.
+  contents:
+  - ps_logistic
+  - ps_ordinal
+  - ps_nominal
+  - bs_continuous
+  - bs_count
 
 - title: "Propensity Score Methods"
   desc: >
@@ -50,3 +65,20 @@ reference:
   contents:
   - ps_match
   - ps_weight
+
+- title: "Sensitivity Analysis"
+  desc: >
+    Functions for assessing robustness of propensity score analyses to
+    unmeasured confounding and model assumptions.
+  contents:
+  - sa_rosenbaum
+  - sa_evalue
+  - sa_overlap
+  - sa_trim_sweep
+
+- title: "Internal"
+  desc: >
+    S3 methods for printing and summarising ps_data objects.
+  contents:
+  - print.ps_data
+  - summary.ps_data
