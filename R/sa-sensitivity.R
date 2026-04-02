@@ -140,8 +140,7 @@ sa_rosenbaum <- function(x,
   res <- rbounds::psens(
     x        = pair_mat,
     Gamma    = gamma_max,
-    GammaInc = gamma_inc,
-    alpha    = alpha
+    GammaInc = gamma_inc
   )
 
   bounds <- data.frame(
