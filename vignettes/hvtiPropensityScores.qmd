@@ -1,0 +1,254 @@
+---
+title: "Introduction to hvtiPropensityScores"
+author: "John Ehrlinger"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+    code-fold: false
+vignette: >
+  %\VignetteIndexEntry{Introduction to hvtiPropensityScores}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+library(hvtiPropensityScores)
+```
+
+## Overview
+
+`hvtiPropensityScores` provides propensity score methods for cardiac surgery
+comparative-effectiveness research.  It ports the balancing logic from our SAS
+programs into a tidy R API compatible with
+[hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/).
+
+Two balancing strategies are supported:
+
+- **Nearest-neighbour matching** (`ps_match`): 1:1 greedy matching without
+  replacement, with optional caliper.
+- **Inverse-probability-of-treatment weighting** (`ps_weight`): IPTW for the
+  ATE, ATT, or ATC estimand, with optional stabilisation and weight
+  winsorisation.
+
+Both functions share a common `ps_data` S3 base class and return an object
+whose `$data` slot carries the original data with the match indicator or weight
+column appended, and whose `$tables` slot carries standardised mean difference
+(SMD) diagnostics.
+
+---
+
+## Sample data
+
+`sample_ps_data()` generates a synthetic cardiac-surgery dataset that mimics a
+typical SAS export: two treatment arms (SAVR / TF-TAVR), several continuous and
+binary covariates, a fitted propensity score (`prob_t`), and a `match` indicator
+initialised to `0`.
+
+```{r}
+#| label: sample-data
+dta <- sample_ps_data(n = 500, seed = 42)
+head(dta)
+```
+
+```{r}
+#| label: sample-data-summary
+table(dta$tavr)
+summary(dta$prob_t)
+```
+
+The two treatment groups differ on all covariates — younger patients with higher
+ejection fraction were more likely to receive TF-TAVR — so the raw SMDs are
+non-trivial and the propensity scores have good overlap.
+
+```{r}
+#| label: ps-hist
+hist(
+  dta$prob_t,
+  breaks = 30,
+  main   = "Propensity score distribution",
+  xlab   = "Estimated probability of TF-TAVR",
+  col    = "steelblue",
+  border = "white"
+)
+```
+
+---
+
+## Propensity score matching
+
+### Build the matched object
+
+`ps_match()` performs greedy 1:1 nearest-neighbour matching without
+replacement.
+
+```{r}
+#| label: match-build
+m <- ps_match(dta)
+print(m)
+```
+
+### Diagnostics
+
+`summary()` prints the available diagnostic tables.
+
+```{r}
+#| label: match-summary
+summary(m)
+```
+
+The `$tables` slot is a named list you can access directly:
+
+```{r}
+#| label: match-tables
+m$tables$smd_before
+m$tables$smd_after
+```
+
+### Extract the matched dataset
+
+`$data` is the *full* dataset with a `match` column set to `1` for matched
+pairs.  Filter to `match == 1` to obtain the matched subset.
+
+```{r}
+#| label: match-data
+matched <- m$data[m$data$match == 1L, ]
+nrow(matched)
+table(matched$tavr)
+```
+
+### Caliper matching
+
+A caliper restricts matches to pairs whose propensity scores differ by no more
+than the supplied threshold, reducing the number of matched pairs in exchange
+for tighter balance.
+
+```{r}
+#| label: match-caliper
+m_cal <- ps_match(dta, caliper = 0.05)
+print(m_cal)
+```
+
+---
+
+## Inverse-probability-of-treatment weighting
+
+### ATE weights (default)
+
+`ps_weight()` computes IPTW weights and appends them to `$data`.  The default
+estimand is the **average treatment effect** (ATE).
+
+```{r}
+#| label: weight-ate
+w_ate <- ps_weight(dta, estimand = "ATE")
+print(w_ate)
+```
+
+```{r}
+#| label: weight-ate-summary
+summary(w_ate)
+```
+
+The `iptw` column holds the stabilised weights.
+
+```{r}
+#| label: weight-ate-head
+head(w_ate$data[, c("id", "tavr", "prob_t", "iptw")])
+summary(w_ate$data$iptw)
+```
+
+### ATT and ATC weights
+
+For the **average treatment effect on the treated** (ATT), treated patients
+receive weight `1` and controls receive `ps / (1 - ps)`.
+
+```{r}
+#| label: weight-att
+w_att <- ps_weight(dta, estimand = "ATT")
+summary(w_att$data$iptw)
+```
+
+For the **average treatment effect on the controls** (ATC), the roles are
+reversed.
+
+```{r}
+#| label: weight-atc
+w_atc <- ps_weight(dta, estimand = "ATC")
+summary(w_atc$data$iptw)
+```
+
+### Weight trimming (winsorisation)
+
+Extreme weights can destabilise estimates.  Supplying `trim` winsorises weights
+to the (`trim`, `1 - trim`) quantile range.
+
+```{r}
+#| label: weight-trim
+w_trim <- ps_weight(dta, estimand = "ATE", trim = 0.05)
+summary(w_trim$data$iptw)
+```
+
+---
+
+## Downstream use with hvtiPlotR
+
+The `$data` and `$tables` slots are designed for direct consumption by
+`hvtiPlotR::hv_mirror_hist()` (weighted mode) and `hvtiPlotR::hv_balance()`.
+
+### Mirror histogram (matched)
+
+```{r}
+#| label: mirror-hist-match
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+library(hvtiPlotR)
+
+mh <- hv_mirror_hist(
+  data          = m$data,
+  x             = prob_t,
+  treatment     = tavr,
+  match_col     = match,
+  group_labels  = c("SAVR", "TF-TAVR")
+)
+plot(mh) +
+  ggplot2::scale_y_continuous(labels = abs) +
+  ggplot2::labs(x = "Propensity Score", y = "Number of Patients") +
+  hv_theme("manuscript")
+```
+
+### Mirror histogram (weighted)
+
+```{r}
+#| label: mirror-hist-weight
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+mh_wt <- hv_mirror_hist(
+  data          = w_ate$data,
+  x             = prob_t,
+  treatment     = tavr,
+  weight_col    = iptw,
+  group_labels  = c("SAVR", "TF-TAVR")
+)
+plot(mh_wt) +
+  ggplot2::scale_y_continuous(labels = abs) +
+  ggplot2::labs(x = "Propensity Score", y = "Weighted Count") +
+  hv_theme("manuscript")
+```
+
+---
+
+## Session info
+
+```{r}
+#| label: session-info
+sessionInfo()
+```

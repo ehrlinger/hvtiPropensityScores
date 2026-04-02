@@ -1,0 +1,52 @@
+url: https://ehrlinger.github.io/hvtiPropensityScores/
+template:
+  bootstrap: 5
+  bslib:
+    bootswatch: zephyr
+    base_font: {google: "Outfit"}
+    code_font: {google: "Fira Code"}
+  light-switch: true
+  theme: atom-one-light
+  theme-dark: atom-one-dark
+
+home:
+  sidebar:
+    structure: [badges, links, authors]
+    components:
+      badges:
+        title: Package badges
+        text: |
+          ![](https://img.shields.io/github/r-package/v/ehrlinger/hvtiPropensityScores)<br>
+          ![](https://img.shields.io/github/actions/workflow/status/ehrlinger/hvtiPropensityScores/pkgdown.yaml)<br>
+
+navbar:
+  structure:
+    right: [search, github, my_linkedin, lightswitch]
+  components:
+    my_linkedin:
+      icon: fa-linkedin
+      href: https://www.linkedin.com/in/ehrlinger/
+      aria-label: LinkedIn
+
+reference:
+- title: "Package Overview"
+  desc: >
+    Package-level documentation and the base S3 class shared by all
+    hvtiPropensityScores data objects.
+  contents:
+  - hvtiPropensityScores-package
+  - is_ps_data
+
+- title: "Data"
+  desc: >
+    Synthetic datasets for examples and unit tests.
+  contents:
+  - sample_ps_data
+
+- title: "Propensity Score Methods"
+  desc: >
+    Functions for balancing treated and control groups via matching or
+    inverse-probability-of-treatment weighting.
+  contents:
+  - ps_match
+  - ps_weight
