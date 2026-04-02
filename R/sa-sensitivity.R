@@ -135,10 +135,11 @@ sa_rosenbaum <- function(x,
   }
 
   # ---- Wilcoxon signed-rank sensitivity analysis ---------------------------
-  pair_mat <- cbind(trt_out, ctl_out)
-
+  # rbounds::psens(x, y) takes two separate numeric vectors:
+  #   x = treated outcomes, y = control outcomes (one value per matched pair).
   res <- rbounds::psens(
-    x        = pair_mat,
+    x        = trt_out,
+    y        = ctl_out,
     Gamma    = gamma_max,
     GammaInc = gamma_inc
   )
