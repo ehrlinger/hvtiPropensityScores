@@ -131,21 +131,23 @@ print.ps_data <- function(x, ...) {
 summary.ps_data <- function(object, ...) {
   cat(sprintf("Summary of <%s>\n\n", class(object)[1L]))
 
-  if (!is.null(object$tables$smd)) {
-    cat("Balance (SMD):\n")
-    print(object$tables$smd)
-    cat("\n")
-  }
-  if (!is.null(object$tables$group_counts)) {
-    cat("Group counts:\n")
-    print(object$tables$group_counts)
-    cat("\n")
-  }
-  if (!is.null(object$tables$effective_n)) {
-    cat("Effective N:\n")
-    print(object$tables$effective_n)
-    cat("\n")
+  tbls <- object$tables
+  if (length(tbls) == 0L) {
+    cat("  (no diagnostic tables)\n")
+  } else {
+    for (nm in names(tbls)) {
+      tbl <- tbls[[nm]]
+      if (!is.null(tbl)) {
+        # Convert underscores to spaces for a readable label
+        label <- gsub("_", " ", nm, fixed = TRUE)
+        label <- paste0(toupper(substring(label, 1L, 1L)),
+                        substring(label, 2L))
+        cat(label, ":\n", sep = "")
+        print(tbl)
+        cat("\n")
+      }
+    }
   }
 
-  invisible(object$tables)
+  invisible(tbls)
 }

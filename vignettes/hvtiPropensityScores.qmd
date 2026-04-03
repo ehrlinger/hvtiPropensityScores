@@ -30,22 +30,24 @@ library(hvtiPropensityScores)
 ## Overview
 
 `hvtiPropensityScores` provides propensity score methods for cardiac surgery
-comparative-effectiveness research.  It ports the balancing logic from our SAS
-programs into a tidy R API compatible with
+comparative-effectiveness research.  It ports the balancing logic from six SAS
+templates into a tidy R API compatible with
 [hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/).
 
-Two balancing strategies are supported:
+The package covers the full workflow from raw covariates to sensitivity analysis:
 
-- **Nearest-neighbour matching** (`ps_match`): 1:1 greedy matching without
-  replacement, with optional caliper.
-- **Inverse-probability-of-treatment weighting** (`ps_weight`): IPTW for the
-  ATE, ATT, or ATC estimand, with optional stabilisation and weight
-  winsorisation.
+1. **Estimate a balancing score** — `ps_logistic()`, `ps_ordinal()`,
+   `ps_nominal()`, `bs_continuous()`, `bs_count()`
+2. **Balance treatment groups** — `ps_match()` (nearest-neighbour matching)
+   or `ps_weight()` (IPTW)
+3. **Diagnose balance** — SMD tables, group counts, and overlap diagnostics
+   in `$tables`, `sa_overlap()`
+4. **Assess sensitivity to unmeasured confounding** — `sa_rosenbaum()`,
+   `sa_evalue()`, `sa_overlap()`, `sa_trim_sweep()`
 
-Both functions share a common `ps_data` S3 base class and return an object
-whose `$data` slot carries the original data with the match indicator or weight
-column appended, and whose `$tables` slot carries standardised mean difference
-(SMD) diagnostics.
+All score and balance objects share a common `ps_data` S3 base class whose
+`$data` slot carries the original dataset with appended columns, `$meta` holds
+run parameters, and `$tables` carries SMD and group-count diagnostics.
 
 ---
 
@@ -82,6 +84,183 @@ hist(
   col    = "steelblue",
   border = "white"
 )
+```
+
+---
+
+## Propensity score estimation
+
+### Binary treatment — `ps_logistic()`
+
+In practice a propensity score is estimated from covariates before matching or
+weighting.  `ps_logistic()` fits `stats::glm(..., family = binomial())` and
+appends several columns that mirror the original SAS template output:
+
+| R column | SAS equivalent | Description |
+|---|---|---|
+| `prob_t` | `_p_` / `_propen_` | Propensity score (probability of treatment) |
+| `logit_t` | `_logit_` | Log-odds: `log(p / (1 - p))` |
+| `mt_wt` | `mt_wt` | Matching weight `min(p, 1-p) / (p·trt + (1-p)·(1-trt))` |
+| `quintile` | `quintile` | Rank-based quintile (1–5) |
+| `decile` | `decile` | Rank-based decile (1–10) |
+
+```{r}
+#| label: ps-logistic
+obj_ps <- ps_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data = sample_ps_data(n = 500, seed = 42)
+)
+print(obj_ps)
+```
+
+The scored dataset can be passed directly to `ps_match()` or `ps_weight()`.
+
+```{r}
+#| label: ps-logistic-cols
+head(obj_ps$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
+                      "quintile", "decile")])
+```
+
+```{r}
+#| label: ps-logistic-to-match
+m_from_ps <- ps_match(obj_ps$data,
+                      score_col = obj_ps$meta$score_col,
+                      seed      = 42)
+print(m_from_ps)
+```
+
+### Multiply-imputed data
+
+The SAS template fits the model separately on each imputed dataset
+(`PROC LOGISTIC ... BY _IMPUTATION_`) and averages predicted probabilities
+with `PROC SUMMARY mean=`.  Pass a stacked long-format MI data frame and set
+`imputation_col` to replicate this.
+
+```{r}
+#| label: ps-logistic-mi
+dta_base <- sample_ps_data(n = 300, seed = 10)
+
+# Simulate two imputed datasets stacked with an imputation index column
+dta_mi <- rbind(cbind(dta_base, imp = 1L),
+                cbind(dta_base, imp = 2L))
+
+obj_mi <- ps_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data           = dta_mi,
+  imputation_col = "imp",
+  id_col         = "id"
+)
+print(obj_mi)
+
+# Per-patient PS is averaged across imputations, matching PROC SUMMARY mean=
+summary(obj_mi$data$prob_t)
+```
+
+### Ordinal treatment — `ps_ordinal()`
+
+For ordered treatment variables (e.g. NYHA functional class I / II / III–IV),
+`ps_ordinal()` fits a proportional-odds cumulative logit model via
+`MASS::polr()`, equivalent to the default `PROC LOGISTIC` behaviour for ordinal
+responses in SAS.
+
+The SAS template decomposes cumulative probabilities into marginal probabilities:
+`p1 = col1; p2 = col2 - col1; p3 = 1 - col2`.  `ps_ordinal()` performs this
+decomposition internally, appending one `prob_<level>` column per level.
+
+```{r}
+#| label: ps-ordinal
+#| eval: !expr requireNamespace("MASS", quietly = TRUE)
+dta_ord <- sample_ps_data_ordinal(n = 400, seed = 1)
+obj_ord  <- ps_ordinal(
+  nyha_grp ~ age + female + ef + diabetes,
+  data = dta_ord
+)
+print(obj_ord)
+
+# One marginal probability column per level
+head(obj_ord$data[, c("id", "nyha_grp",
+                       obj_ord$meta$score_cols)])
+
+# Quintile distribution (ordered by P(highest level) as in SAS)
+table(obj_ord$data$quintile)
+```
+
+### Nominal treatment — `ps_nominal()`
+
+For unordered multi-level treatments (e.g. repair type: CE / COS / PER / DEV),
+`ps_nominal()` fits a generalised logit model via `nnet::multinom()`, equivalent
+to SAS `PROC LOGISTIC ... / link=glogit`.  The first factor level is the
+reference category (`REF=first` in SAS); use `ref_level` to override.
+
+```{r}
+#| label: ps-nominal
+#| eval: !expr requireNamespace("nnet", quietly = TRUE)
+dta_nom <- sample_ps_data_nominal(n = 400, seed = 2)
+obj_nom  <- ps_nominal(
+  rtyp ~ age + female + ef + diabetes,
+  data = dta_nom
+)
+print(obj_nom)
+
+# One probability column per repair type (analogous to p_cos, p_per, etc.)
+head(obj_nom$data[, c("id", "rtyp", obj_nom$meta$score_cols)])
+```
+
+---
+
+## Balancing scores for continuous and count exposures
+
+When the "treatment" is a continuous or count variable (e.g. units of RBC
+transfused, nadir haematocrit), a propensity score is undefined.  The SAS
+templates instead estimate a **balancing score**: the linear predictor from a
+saturated model.  Patients with similar balancing scores have similar expected
+exposure values, enabling within-stratum comparisons analogous to PS
+stratification.
+
+### Continuous exposure — `bs_continuous()`
+
+Mirrors `tp.rm.continuous.balncing_score.sas` (PROC REG balancing score on
+nadir HCT).  The fitted value from `stats::lm()` is used as the score.
+
+```{r}
+#| label: bs-continuous
+dta <- sample_ps_data(n = 400, seed = 5)
+obj_bs <- bs_continuous(
+  ef ~ age + female + diabetes + hypertension,
+  data   = dta,
+  id_col = "id"
+)
+print(obj_bs)
+
+# Balancing score and decile-based strata
+head(obj_bs$data[, c("id", "ef", "bs", "quintile", "decile", "cluster")])
+
+# Binary stratum indicators stra_1 ... stra_10 mirror the SAS %grp macro
+table(obj_bs$data$cluster)
+```
+
+### Count exposure — `bs_count()`
+
+Mirrors `tp.pm.count.balncing_score.sas` (PROC GENMOD dist=nb link=log).  The
+**linear predictor on the log scale** (`xbeta`) is used as the balancing score,
+not the fitted count — the log scale is continuous and unbounded, making it
+more suitable for rank-based stratification.
+
+```{r}
+#| label: bs-count
+#| eval: !expr requireNamespace("MASS", quietly = TRUE)
+dta_cnt <- sample_ps_data_count(n = 400, seed = 6)
+
+# Negative binomial to account for overdispersion (SAS dist=nb)
+obj_cnt <- bs_count(
+  rbc_tot ~ female + age + diabetes + hypertension,
+  data = dta_cnt,
+  dist = "negbin"
+)
+print(obj_cnt)
+
+head(obj_cnt$data[, c("id", "rbc_tot", "bs", "cluster",
+                       "stra_1", "stra_2")])
 ```
 
 ---
@@ -197,6 +376,94 @@ to the (`trim`, `1 - trim`) quantile range.
 #| label: weight-trim
 w_trim <- ps_weight(dta, estimand = "ATE", trim = 0.05)
 summary(w_trim$data$iptw)
+```
+
+---
+
+## Sensitivity analysis
+
+Every observational study rests on the assumption of no unmeasured confounding.
+The four `sa_*` functions quantify how strong an unmeasured confounder would
+need to be to change the study's conclusions.
+
+```{r}
+#| label: sa-setup
+dta  <- sample_ps_data(n = 500, seed = 42)
+m    <- ps_match(dta, seed = 42)
+w    <- ps_weight(dta, estimand = "ATE")
+```
+
+### Overlap and positivity — `sa_overlap()`
+
+Before any analysis, check that the PS distributions overlap sufficiently.
+`sa_overlap()` reports the common support region, the fraction of each group
+outside it, and near-positivity-violation flags.
+
+```{r}
+#| label: sa-overlap
+ov <- sa_overlap(m)
+ov$overlap_region
+ov$outside_overlap
+ov$positivity_flags
+```
+
+### Weight-trimming sensitivity sweep — `sa_trim_sweep()`
+
+Extreme IPTW weights inflate variance and can dominate estimates.
+`sa_trim_sweep()` sweeps a range of winsorisation thresholds and reports how
+ESS and the weight distribution change.  Use this to choose a trimming level
+that controls extreme weights without unacceptable loss of sample size.
+
+```{r}
+#| label: sa-trim-sweep
+sweep <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))
+head(sweep)
+
+# ESS at no trimming vs. 5% trimming
+sweep[sweep$trim %in% c(0, 0.05), c("trim", "ess_control",
+                                      "ess_treated", "max_weight")]
+```
+
+### E-values — `sa_evalue()`
+
+The E-value (VanderWeele & Ding 2017) is the minimum risk-ratio that an
+unmeasured confounder would need with *both* the treatment and the outcome to
+fully explain away the observed association.  A large E-value indicates a more
+robust finding.
+
+```{r}
+#| label: sa-evalue-rr
+# Suppose a matched analysis yields RR = 1.8 (95% CI 1.3 to 2.5)
+ev <- sa_evalue(1.8, ci_lo = 1.3, ci_hi = 2.5, type = "RR")
+ev$evalue_estimate   # confounder must be this strong to explain the RR
+ev$evalue_ci         # must be this strong to explain even the CI lower bound
+```
+
+```{r}
+#| label: sa-evalue-rd
+# Risk difference of 0.08 with baseline outcome probability 0.15
+ev_rd <- sa_evalue(0.08, ci_lo = 0.02, ci_hi = 0.14,
+                   type = "RD", p0 = 0.15)
+ev_rd$evalue_estimate
+```
+
+### Rosenbaum sensitivity bounds — `sa_rosenbaum()`
+
+For matched analyses, `sa_rosenbaum()` computes worst- and best-case p-value
+bounds for the Wilcoxon signed-rank test under a hidden-bias parameter Γ
+(Rosenbaum 2002).  Γ = 1 means no hidden bias; the **sensitivity value** is
+the largest Γ at which the analysis remains significant.
+
+```{r}
+#| label: sa-rosenbaum
+res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 3, gamma_inc = 0.25)
+
+# Summary: how sensitive is the result?
+res$sensitivity_value   # largest Gamma where upper p-value < 0.05
+res$n_pairs
+
+# Full bounds table
+head(res$bounds)
 ```
 
 ---

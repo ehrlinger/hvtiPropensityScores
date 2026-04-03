@@ -195,7 +195,8 @@
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #'
-#' # Single complete dataset
+#' # --- Single complete dataset (mirrors tp.lm.logistic_propensity_score.nomi.sas)
+#' # Equivalent to: PROC LOGISTIC data=built descending; model tavr = ...;
 #' obj <- ps_logistic(
 #'   tavr ~ age + female + ef + diabetes + hypertension,
 #'   data = dta
@@ -203,9 +204,42 @@
 #' print(obj)
 #' summary(obj)
 #'
-#' # Pass the scored data to ps_match()
-#' matched <- ps_match(obj$data, score_col = obj$meta$score_col)
+#' # The function appends:
+#' #   prob_t   -- propensity score (p-hat; SAS _p_ / _propen_)
+#' #   logit_t  -- log(p/(1-p))    (SAS _logit_)
+#' #   mt_wt    -- matching weight  (SAS mt_wt = min(p,1-p)/(p*trt+(1-p)*(1-trt)))
+#' #   quintile -- rank-based quintile (SAS int(_n_/(nobs/5))+1)
+#' #   decile   -- rank-based decile
+#' head(obj$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
+#'                   "quintile", "decile")])
+#'
+#' # Pass the scored data to ps_match() for downstream matching
+#' matched <- ps_match(obj$data, score_col = obj$meta$score_col, seed = 42)
 #' nrow(matched$data[matched$data$match == 1L, ])
+#'
+#' # --- Multiply-imputed data (mirrors tp.lm.logistic_propensity_score.sas)
+#' # Equivalent to:
+#' #   PROC LOGISTIC data=built descending; BY _IMPUTATION_; model tavr = ...;
+#' #   PROC SUMMARY data=decile; class ccfid; var _p_; output out=... mean=_propen;
+#' \donttest{
+#' # Simulate a stacked MI dataset (2 imputations, column "_Imputation_")
+#' dta_mi <- rbind(
+#'   cbind(dta, `_Imputation_` = 1L),
+#'   cbind(dta, `_Imputation_` = 2L)
+#' )
+#' names(dta_mi)[names(dta_mi) == "_Imputation_"] <- "imp"
+#'
+#' obj_mi <- ps_logistic(
+#'   tavr ~ age + female + ef + diabetes + hypertension,
+#'   data           = dta_mi,
+#'   imputation_col = "imp",
+#'   id_col         = "id"
+#' )
+#' print(obj_mi)
+#' # Per-patient PS is the average across the two imputed-dataset predictions,
+#' # matching the PROC SUMMARY mean= step in the SAS template.
+#' head(obj_mi$data[, c("id", "tavr", "prob_t")])
+#' }
 #'
 #' @export
 ps_logistic <- function(formula,
@@ -374,14 +408,25 @@ print.ps_logistic <- function(x, ...) {
 #' @seealso [ps_logistic()], [ps_nominal()], [ps_match()]
 #'
 #' @examples
-#' \dontrun{
+#' # Mirrors the SAS template workflow:
+#' #   PROC LOGISTIC (cumulative logit, default for ordinal response)
+#' #   followed by decomposition of cumulative to marginal probabilities
+#' #   and rank-based quintile / decile assignment.
+#' \donttest{
 #' dta <- sample_ps_data_ordinal(n = 300, seed = 42)
 #' obj <- ps_ordinal(
 #'   nyha_grp ~ age + female + ef + diabetes,
 #'   data = dta
 #' )
 #' print(obj)
+#'
+#' # Each level gets its own probability column (marginal, not cumulative).
+#' # The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
+#' # ps_ordinal() performs this decomposition internally.
 #' head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
+#'
+#' # Quintile and decile columns are appended, ordered by p(highest level).
+#' table(obj$data$quintile)
 #' }
 #'
 #' @export
@@ -570,14 +615,28 @@ print.ps_ordinal <- function(x, ...) {
 #' @seealso [ps_logistic()], [ps_ordinal()], [ps_match()]
 #'
 #' @examples
-#' \dontrun{
+#' # Mirrors the SAS template workflow:
+#' #   PROC LOGISTIC ... / link=glogit  (generalised logit)
+#' # The first factor level is used as the reference category, matching
+#' # SAS REF=first.  Change ref_level to match a different reference.
+#' \donttest{
 #' dta <- sample_ps_data_nominal(n = 300, seed = 42)
 #' obj <- ps_nominal(
 #'   rtyp ~ age + female + ef + diabetes,
 #'   data = dta
 #' )
 #' print(obj)
+#'
+#' # One probability column per treatment level (analogous to p_cos, p_per,
+#' # p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
 #' head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
+#'
+#' # Explicitly set a different reference level
+#' obj_ce <- ps_nominal(
+#'   rtyp ~ age + female + ef + diabetes,
+#'   data      = dta,
+#'   ref_level = "CE"    # matches REF=last in SAS
+#' )
 #' }
 #'
 #' @export

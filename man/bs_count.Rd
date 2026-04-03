@@ -86,15 +86,36 @@ recommended R package, usually pre-installed).  Install with
 }
 
 \examples{
-\dontrun{
+# Mirrors the SAS template workflow:
+#   PROC GENMOD dist=nb link=log (negative binomial for overdispersed counts)
+#   xbeta (log-scale linear predictor) used as the balancing score
+#   (not the fitted count -- log scale is more suitable for stratification).
+# The \%grp macro binary indicators stra_1 ... stra_k are created when
+# create_binary_strata = TRUE (the default).
+\donttest{
 dta <- sample_ps_data_count(n = 300, seed = 42)
+
+# Poisson fallback (no MASS dependency)
 obj <- bs_count(
   rbc_tot ~ female + age + diabetes + hypertension,
   data = dta,
-  dist = "poisson"   # or "negbin" if MASS is available
+  dist = "poisson"
 )
 print(obj)
-table(obj$data$cluster)
+table(obj$data$cluster)    # 10 equal-ish strata by default
+
+# Binary stratum indicators mirror the SAS \%grp macro output
+head(obj$data[, c("id", "bs", "cluster", "stra_1", "stra_2", "stra_10")])
+
+# Negative binomial (accounts for overdispersion; requires MASS)
+if (requireNamespace("MASS", quietly = TRUE)) {
+  obj_nb <- bs_count(
+    rbc_tot ~ female + age + diabetes + hypertension,
+    data = dta,
+    dist = "negbin"
+  )
+  print(obj_nb)
+}
 }
 
 }
