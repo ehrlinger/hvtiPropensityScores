@@ -134,7 +134,7 @@ S3 methods for printing and summarising ps_data objects.
 
 # Articles
 
-### All vignettes
+### Get started
 
 - [Introduction to
   hvtiPropensityScores](https://ehrlinger.github.io/hvtiPropensityScores/articles/hvtiPropensityScores.md):
