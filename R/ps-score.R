@@ -87,10 +87,25 @@
     p   <- pred_fn(fit, sub)
 
     if (j == 1L) {
-      id_ref        <- sub[[id_col]]
+      id_ref         <- sub[[id_col]]
       pred_list[[j]] <- p
     } else {
-      ord            <- match(id_ref, sub[[id_col]])
+      ord <- match(id_ref, sub[[id_col]])
+      # Warn if any patient IDs from imputation 1 are absent in this imputation.
+      # If ord contains NA, p[NA] = NA; rowMeans(na.rm=TRUE) will use the
+      # remaining imputations only, silently performing available-case averaging.
+      n_missing <- sum(is.na(ord))
+      if (n_missing > 0L) {
+        rlang::warn(
+          sprintf(
+            paste0(
+              "Imputation %s is missing %d patient ID(s) present in imputation %s. ",
+              "Propensity scores for those patients will be averaged over fewer imputations."
+            ),
+            imp, n_missing, imputations[1L]
+          )
+        )
+      }
       pred_list[[j]] <- if (is.matrix(p)) p[ord, , drop = FALSE] else p[ord]
     }
   }

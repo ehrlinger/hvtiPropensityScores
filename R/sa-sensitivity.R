@@ -61,12 +61,9 @@
 #' @examples
 #' dta <- sample_ps_data(n = 300, seed = 1)
 #' m   <- ps_match(dta)
-#' \dontrun{
-#'   # requires rbounds
-#'   res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
-#'   res$bounds
-#'   res$sensitivity_value
-#' }
+#' res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
+#' res$bounds
+#' res$sensitivity_value
 #'
 #' @export
 sa_rosenbaum <- function(x,
@@ -76,14 +73,6 @@ sa_rosenbaum <- function(x,
                          alpha         = 0.05,
                          treatment_col = NULL,
                          pair_id_col   = "pair_id") {
-
-  if (!requireNamespace("rbounds", quietly = TRUE)) {
-    rlang::abort(
-      c("Package 'rbounds' is required for sa_rosenbaum().",
-        i = "Install it with: install.packages('rbounds')"),
-      call. = FALSE
-    )
-  }
 
   # ---- Extract data frame --------------------------------------------------
   if (is_ps_data(x)) {
@@ -101,8 +90,29 @@ sa_rosenbaum <- function(x,
     rlang::abort("`x` must be a ps_match object or a data frame.", call. = FALSE)
   }
 
+  # ---- Validate parameters -------------------------------------------------
+  if (!is.numeric(gamma_max) || length(gamma_max) != 1L || gamma_max < 1) {
+    rlang::abort("`gamma_max` must be a single number >= 1.", call. = FALSE)
+  }
+  if (!is.numeric(gamma_inc) || length(gamma_inc) != 1L || gamma_inc <= 0) {
+    rlang::abort("`gamma_inc` must be a single positive number.", call. = FALSE)
+  }
+  if (!is.numeric(alpha) || length(alpha) != 1L || alpha <= 0 || alpha >= 1) {
+    rlang::abort("`alpha` must be a single number in (0, 1).", call. = FALSE)
+  }
+
   # ---- Validate columns ----------------------------------------------------
   .check_cols(dta, c(outcome_col, treatment_col, pair_id_col))
+
+  if (!is.numeric(dta[[outcome_col]])) {
+    rlang::abort(
+      sprintf(
+        "`outcome_col` ('%s') must be numeric. Factors and characters produce wrong ranks.",
+        outcome_col
+      ),
+      call. = FALSE
+    )
+  }
 
   # ---- Extract matched pairs -----------------------------------------------
   matched <- dta[!is.na(dta[[pair_id_col]]), , drop = FALSE]
@@ -121,11 +131,20 @@ sa_rosenbaum <- function(x,
   trt_out  <- trt_rows[[outcome_col]][match(pair_ids, trt_rows[[pair_id_col]])]
   ctl_out  <- ctl_rows[[outcome_col]][match(pair_ids, ctl_rows[[pair_id_col]])]
 
-  # Drop pairs with missing outcome values
-  complete <- !is.na(trt_out) & !is.na(ctl_out)
-  trt_out  <- trt_out[complete]
-  ctl_out  <- ctl_out[complete]
-  n_pairs  <- sum(complete)
+  # Drop pairs with missing outcome values (warn so the caller knows)
+  complete  <- !is.na(trt_out) & !is.na(ctl_out)
+  n_dropped <- sum(!complete)
+  if (n_dropped > 0L) {
+    rlang::warn(
+      sprintf(
+        "%d matched pair(s) dropped due to missing outcome values in '%s'.",
+        n_dropped, outcome_col
+      )
+    )
+  }
+  trt_out <- trt_out[complete]
+  ctl_out <- ctl_out[complete]
+  n_pairs <- sum(complete)
 
   if (n_pairs < 2L) {
     rlang::abort(
@@ -134,23 +153,78 @@ sa_rosenbaum <- function(x,
     )
   }
 
-  # ---- Wilcoxon signed-rank sensitivity analysis ---------------------------
-  # rbounds::psens(x, y) takes two separate numeric vectors:
-  #   x = treated outcomes, y = control outcomes (one value per matched pair).
-  res <- rbounds::psens(
-    x        = trt_out,
-    y        = ctl_out,
-    Gamma    = gamma_max,
-    GammaInc = gamma_inc
-  )
+  # ---- Rosenbaum bounds for Wilcoxon signed-rank statistic -----------------
+  # Direct implementation of Rosenbaum (2002), Ch. 4.
+  #
+  # d_i = treated_i - control_i for each matched pair.
+  # T+  = sum of ranks of |d_i| among nonzero pairs where d_i > 0.
+  #
+  # Under hidden bias Gamma (odds of differential assignment):
+  #   max E[T+] = Gamma/(1+Gamma) * n*(n+1)/2
+  #   min E[T+] = 1/(1+Gamma)     * n*(n+1)/2
+  #   Var[T+]   = Gamma/(1+Gamma)^2 * n*(n+1)*(2n+1)/6
+  #
+  # p_upper (worst-case p-value): bias inflates E[T+], making result look
+  #   less extreme.  p+ = P(T+ >= t_obs | max bias).
+  # p_lower (best-case p-value):  bias deflates E[T+], making result look
+  #   more extreme. p- = P(T+ >= t_obs | min bias).
+  #
+  # A continuity correction of 0.5 is applied (standard for discrete statistics).
 
-  bounds <- data.frame(
-    gamma        = res[["Gamma"]],
-    p_upper      = res[["pval+"]],
-    p_lower      = res[["pval-"]],
-    reject_upper = res[["pval+"]] < alpha,
-    stringsAsFactors = FALSE
-  )
+  d    <- trt_out - ctl_out
+  d_nz <- d[d != 0]
+  n_nz <- length(d_nz)
+
+  if (n_nz == 0L) {
+    rlang::abort(
+      "All matched-pair differences are zero; the signed-rank statistic is undefined.",
+      call. = FALSE
+    )
+  }
+
+  # ---- Orient the test to the observed direction --------------------------
+  # The Wilcoxon signed-rank statistic T+ counts positive-difference ranks.
+  # If the median difference is negative (treatment appears harmful), orient
+  # the test on the negative differences so that p_upper still represents the
+  # worst-case (least significant) p-value.
+  if (stats::median(d_nz) < 0) {
+    rlang::warn(
+      paste0(
+        "Median matched-pair difference (treated - control) is negative. ",
+        "The test has been re-oriented to the lower tail. ",
+        "p_upper and p_lower reflect the worst- and best-case p-values ",
+        "for a *harmful* treatment effect."
+      )
+    )
+    d_nz <- -d_nz
+  }
+
+  r      <- rank(abs(d_nz))
+  T_plus <- sum(r[d_nz > 0])
+
+  # Round to avoid floating-point accumulation: seq(1, 3, 0.25) can produce
+  # values like 2.9999999999 instead of 3.0.
+  gammas <- round(seq(1, gamma_max, by = gamma_inc), digits = 10)
+
+  bounds_list <- lapply(gammas, function(g) {
+    mu_hi <- g / (1 + g) * n_nz * (n_nz + 1) / 2
+    mu_lo <- 1 / (1 + g) * n_nz * (n_nz + 1) / 2
+    sigma <- sqrt(g * n_nz * (n_nz + 1) * (2 * n_nz + 1) / (6 * (1 + g)^2))
+
+    p_up <- 1 - stats::pnorm((T_plus - 0.5 - mu_hi) / sigma)
+    p_lo <- 1 - stats::pnorm((T_plus - 0.5 - mu_lo) / sigma)
+
+    data.frame(
+      gamma        = g,
+      p_upper      = max(0, min(1, p_up)),
+      p_lower      = max(0, min(1, p_lo)),
+      reject_upper = p_up < alpha,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  bounds <- do.call(rbind, bounds_list)
+  rownames(bounds) <- NULL
 
   sig_gammas        <- bounds$gamma[bounds$reject_upper]
   sensitivity_value <- if (length(sig_gammas) > 0L) max(sig_gammas) else NA_real_
@@ -187,7 +261,9 @@ sa_rosenbaum <- function(x,
 #' @param ci_hi     Optional numeric.  Upper confidence interval bound.
 #'   Both `ci_lo` and `ci_hi` must be supplied together to compute the CI
 #'   E-value.
-#' @param type      One of `"RR"` (default), `"OR"`, `"HR"`, or `"RD"`.
+#' @param type      One of `"RR"` (default), `"OR"`, `"HR"`, `"IRR"`, or
+#'   `"RD"`.  `"IRR"` (incidence rate ratio) uses the same formula as `"RR"`;
+#'   it is provided as a distinct value for clarity in count-outcome studies.
 #' @param p0        Baseline outcome probability in the unexposed group.
 #'   Required when `type = "RD"`.  Must be in (0, 1).
 #'
@@ -223,7 +299,7 @@ sa_rosenbaum <- function(x,
 sa_evalue <- function(estimate,
                       ci_lo    = NULL,
                       ci_hi    = NULL,
-                      type     = c("RR", "OR", "HR", "RD"),
+                      type     = c("RR", "OR", "HR", "IRR", "RD"),
                       p0       = NULL) {
 
   type <- match.arg(type)
@@ -233,7 +309,7 @@ sa_evalue <- function(estimate,
                  call. = FALSE)
   }
 
-  if (type %in% c("RR", "OR", "HR") && estimate <= 0) {
+  if (type %in% c("RR", "OR", "HR", "IRR") && estimate <= 0) {
     rlang::abort(
       sprintf("`estimate` must be positive for type = '%s'.", type),
       call. = FALSE
@@ -260,20 +336,74 @@ sa_evalue <- function(estimate,
     )
   }
 
+  # Validate CI bounds are positive for ratio measures
+  for (bound_name in c("ci_lo", "ci_hi")) {
+    bound_val <- get(bound_name)
+    if (!is.null(bound_val) && type %in% c("RR", "OR", "HR", "IRR") &&
+        bound_val <= 0) {
+      rlang::abort(
+        sprintf(
+          "`%s` must be positive for type = '%s' (got %g).",
+          bound_name, type, bound_val
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  # ---- Rare-outcome approximation warning for OR/HR ------------------------
+  # sqrt(OR) and sqrt(HR) are only accurate when outcome prevalence is low.
+  # If p0 is supplied (and > 0.15), warn that the approximation may be poor.
+  if (type %in% c("OR", "HR") && !is.null(p0) && p0 > 0.15) {
+    rlang::warn(
+      sprintf(
+        paste0(
+          "The rare-outcome approximation RR ~ sqrt(%s) may be inaccurate when ",
+          "baseline outcome probability (p0 = %.2f) exceeds ~0.15. ",
+          "Consider converting to RR directly before calling sa_evalue()."
+        ),
+        type, p0
+      )
+    )
+  }
+
   # ---- Convert estimate to RR scale ----------------------------------------
   .to_rr <- function(val) {
     switch(type,
       RR  = val,
-      OR  = sqrt(val),          # rare-outcome approximation
-      HR  = sqrt(val),          # rare-outcome approximation
-      RD  = (val + p0) / p0    # RR = p1/p0, p1 = RD + p0
+      IRR = val,                 # identical formula to RR
+      OR  = sqrt(val),           # rare-outcome approximation
+      HR  = sqrt(val),           # rare-outcome approximation
+      RD  = {
+        p1 <- val + p0           # implied outcome probability in exposed
+        if (p1 <= 0) {
+          rlang::abort(
+            sprintf(
+              "RD (%g) + p0 (%g) = %g <= 0: implied outcome probability in the exposed group is non-positive.",
+              val, p0, p1
+            ),
+            call. = FALSE
+          )
+        }
+        if (p1 > 1) {
+          rlang::abort(
+            sprintf(
+              "RD (%g) + p0 (%g) = %g > 1: implied outcome probability in the exposed group exceeds 1.",
+              val, p0, p1
+            ),
+            call. = FALSE
+          )
+        }
+        p1 / p0
+      }
     )
   }
 
   # ---- E-value formula for RR >= 1 ------------------------------------------
   # For a protective effect (rr < 1) flip to rr > 1 first.
   .evalue_rr <- function(rr) {
-    if (is.na(rr) || rr == 1) return(1)
+    if (is.na(rr)) return(NA_real_)
+    if (abs(rr - 1) < 1e-9) return(1)    # float-safe null check
     if (rr < 1) rr <- 1 / rr
     rr + sqrt(rr * (rr - 1))
   }
@@ -289,10 +419,10 @@ sa_evalue <- function(estimate,
     # Pick the CI bound closer to the null
     ci_bound <- if (estimate > null_val) ci_lo else ci_hi
 
-    # If CI already crosses or touches null the E-value is 1 by convention
+    # Float-safe null-crossing check
     null_crossed <- (estimate > null_val && ci_lo <= null_val) ||
                     (estimate < null_val && ci_hi >= null_val) ||
-                    estimate == null_val
+                    abs(estimate - null_val) < 1e-9
 
     if (null_crossed) {
       ev_ci <- 1
@@ -383,6 +513,7 @@ sa_overlap <- function(x,
 
   # ---- Validate inputs -----------------------------------------------------
   .check_cols(dta, c(score_col, treatment_col))
+  .check_binary(dta, treatment_col)
   .check_probability(dta, score_col)
 
   if (!is.numeric(trim_threshold) || length(trim_threshold) != 1L ||
@@ -394,10 +525,36 @@ sa_overlap <- function(x,
   ps  <- dta[[score_col]]
   trt <- as.integer(dta[[treatment_col]])
 
+  # Drop rows where PS is NA before computing group sizes, so that n0/n1
+  # match the summary statistics (which use na.rm=TRUE but still exclude NAs).
+  # Separately report how many were dropped.
+  n_ps_na <- sum(is.na(ps))
+  if (n_ps_na > 0L) {
+    rlang::warn(
+      sprintf(
+        "%d patient(s) with missing '%s' values excluded from overlap diagnostics.",
+        n_ps_na, score_col
+      )
+    )
+  }
+  keep <- !is.na(ps)
+  ps   <- ps[keep]
+  trt  <- trt[keep]
+
   ps0 <- ps[trt == 0L]
   ps1 <- ps[trt == 1L]
   n0  <- length(ps0)
   n1  <- length(ps1)
+
+  # Warn if either group is too small for reliable diagnostics
+  if (n0 < 2L || n1 < 2L) {
+    rlang::warn(
+      sprintf(
+        "One or both treatment groups have fewer than 2 patients after removing missing PS values (n_control=%d, n_treated=%d). Overlap diagnostics may be unreliable.",
+        n0, n1
+      )
+    )
+  }
 
   # ---- Summary statistics --------------------------------------------------
   .ps_summary <- function(psv, grp, n) {
@@ -418,12 +575,27 @@ sa_overlap <- function(x,
                        .ps_summary(ps1, "treated", n1))
 
   # ---- Overlap region ------------------------------------------------------
-  overlap_lo <- max(min(ps0, na.rm = TRUE), min(ps1, na.rm = TRUE))
-  overlap_hi <- min(max(ps0, na.rm = TRUE), max(ps1, na.rm = TRUE))
+  overlap_lo <- max(min(ps0), min(ps1))
+  overlap_hi <- min(max(ps0), max(ps1))
+
+  if (overlap_lo > overlap_hi) {
+    rlang::warn(
+      sprintf(
+        paste0(
+          "No common support: PS distributions do not overlap ",
+          "(control range [%.4f, %.4f]; treated range [%.4f, %.4f]). ",
+          "All patients are outside the overlap region. ",
+          "IPTW and matching results are not reliable for this data."
+        ),
+        min(ps0), max(ps0), min(ps1), max(ps1)
+      )
+    )
+  }
+
   overlap_region <- c(lower = round(overlap_lo, 4), upper = round(overlap_hi, 4))
 
   # ---- Outside overlap -----------------------------------------------------
-  .n_outside <- function(psv) sum(psv < overlap_lo | psv > overlap_hi, na.rm = TRUE)
+  .n_outside <- function(psv) sum(psv < overlap_lo | psv > overlap_hi)
   n_out0 <- .n_outside(ps0)
   n_out1 <- .n_outside(ps1)
 
@@ -556,6 +728,23 @@ sa_trim_sweep <- function(x,
     ATC = ifelse(trt == 1L, (1 - ps) / ps, 1)
   )
 
+  # Guard against Inf weights from ps = 0 or ps = 1.
+  # .check_probability() allows exact 0/1; flag those patients explicitly.
+  n_inf <- sum(is.infinite(raw_w))
+  if (n_inf > 0L) {
+    rlang::warn(
+      sprintf(
+        paste0(
+          "%d patient(s) have a propensity score of exactly 0 or 1, producing ",
+          "infinite IPTW weights. Those weights cannot be trimmed and will ",
+          "dominate all statistics. Consider excluding these patients or ",
+          "recalibrating the propensity model."
+        ),
+        n_inf
+      )
+    )
+  }
+
   if (stabilise) {
     p_trt  <- mean(trt == 1L)
     raw_w  <- raw_w * ifelse(trt == 1L, p_trt, 1 - p_trt)
@@ -563,7 +752,9 @@ sa_trim_sweep <- function(x,
 
   # ---- Sweep ---------------------------------------------------------------
   rows <- lapply(sort(trim_seq), function(tr) {
-    if (tr == 0) {
+    # Use a machine-epsilon guard instead of exact == 0 comparison, since
+    # seq(0, 0.10, by = 0.01) can produce values like 1e-17 instead of 0.
+    if (tr < .Machine$double.eps) {
       w <- raw_w
       n_trimmed <- 0L
     } else {

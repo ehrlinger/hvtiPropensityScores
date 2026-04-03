@@ -12,7 +12,8 @@ ps_match(
   caliper = NULL,
   covariates = NULL,
   match_col = "match",
-  ratio = 1L
+  ratio = 1L,
+  seed = NULL
 )
 }
 \arguments{
@@ -42,6 +43,11 @@ overwritten.}
 
 \item{ratio}{Matching ratio (controls : treated).  Currently
 only \code{1} (1:1) is supported.  Default \code{1}.}
+
+\item{seed}{Integer seed for the random shuffling of treated-
+patient order that reduces order-dependence.  Pass an integer for a
+reproducible matched set; \code{NULL} (default) uses the session's current
+RNG state (not reproducible across sessions).}
 }
 \value{
 An object of class \code{c("ps_match", "ps_data")} with:

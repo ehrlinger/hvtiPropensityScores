@@ -15,7 +15,14 @@
 A single numeric SMD value.
 }
 \description{
-Uses the pooled standard deviation: \code{SMD = (mean1 - mean0) / sd_pooled}.
-Returns \code{NA_real_} if either group is empty or has zero variance.
+Uses the sample-size-weighted pooled standard deviation:
+\code{sp = sqrt(((n0-1)*s0^2 + (n1-1)*s1^2) / (n0+n1-2))}.
+This is correct for unequal group sizes (e.g. pre-match diagnostics).
+The equal-weight formula \code{sqrt((s0^2 + s1^2) / 2)} is only unbiased when
+n0 == n1.
+}
+\details{
+Returns \code{NA_real_} if either group has fewer than 2 observations or the
+pooled SD is zero (constant covariate).
 }
 \keyword{internal}

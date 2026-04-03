@@ -8,7 +8,7 @@ sa_evalue(
   estimate,
   ci_lo = NULL,
   ci_hi = NULL,
-  type = c("RR", "OR", "HR", "RD"),
+  type = c("RR", "OR", "HR", "IRR", "RD"),
   p0 = NULL
 )
 }
@@ -22,7 +22,9 @@ original scale).  Must be > 0 for RR/OR/HR; any finite value for RD.}
 Both \code{ci_lo} and \code{ci_hi} must be supplied together to compute the CI
 E-value.}
 
-\item{type}{One of \code{"RR"} (default), \code{"OR"}, \code{"HR"}, or \code{"RD"}.}
+\item{type}{One of \code{"RR"} (default), \code{"OR"}, \code{"HR"}, \code{"IRR"}, or
+\code{"RD"}.  \code{"IRR"} (incidence rate ratio) uses the same formula as \code{"RR"};
+it is provided as a distinct value for clarity in count-outcome studies.}
 
 \item{p0}{Baseline outcome probability in the unexposed group.
 Required when \code{type = "RD"}.  Must be in (0, 1).}

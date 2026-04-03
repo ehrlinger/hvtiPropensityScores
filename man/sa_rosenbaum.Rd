@@ -60,12 +60,9 @@ value indicates a more robust result.
 \examples{
 dta <- sample_ps_data(n = 300, seed = 1)
 m   <- ps_match(dta)
-\dontrun{
-  # requires rbounds
-  res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
-  res$bounds
-  res$sensitivity_value
-}
+res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
+res$bounds
+res$sensitivity_value
 
 }
 \references{

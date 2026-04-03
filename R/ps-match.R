@@ -45,6 +45,10 @@
 #'   overwritten.
 #' @param ratio          Matching ratio (controls : treated).  Currently
 #'   only `1` (1:1) is supported.  Default `1`.
+#' @param seed           Integer seed for the random shuffling of treated-
+#'   patient order that reduces order-dependence.  Pass an integer for a
+#'   reproducible matched set; `NULL` (default) uses the session's current
+#'   RNG state (not reproducible across sessions).
 #'
 #' @return An object of class `c("ps_match", "ps_data")` with:
 #' \describe{
@@ -89,7 +93,8 @@ ps_match <- function(data,
                      caliper       = NULL,
                      covariates    = NULL,
                      match_col     = "match",
-                     ratio         = 1L) {
+                     ratio         = 1L,
+                     seed          = NULL) {
 
   # ---- Input validation ---------------------------------------------------
   .check_df(data)
@@ -106,6 +111,13 @@ ps_match <- function(data,
                  call. = FALSE)
   }
 
+  # ---- Warn if pair_id column already exists in input data ---------------
+  if ("pair_id" %in% names(data)) {
+    rlang::warn(
+      "Input data already contains a column named 'pair_id'. It will be overwritten."
+    )
+  }
+
   # ---- Split treated / control -------------------------------------------
   trt <- as.integer(data[[treatment_col]])
   ps  <- data[[score_col]]
@@ -118,26 +130,42 @@ ps_match <- function(data,
   ps_c <- ps[idx_c]
 
   # ---- Nearest-neighbour matching (greedy, without replacement) ----------
-  matched_c <- integer(0)   # control indices that have been matched
-  pair_t    <- integer(0)   # row indices of matched treated patients
-  pair_c    <- integer(0)   # row indices of matched control  patients
+  # Pre-allocate to maximum possible size to avoid O(n^2) vector growth.
+  n_t       <- length(idx_t)
+  matched_c <- logical(length(idx_c))    # TRUE = this control already used
+  pair_t    <- integer(n_t)
+  pair_c    <- integer(n_t)
+  k         <- 0L                        # matched pairs found so far
 
-  # Randomise treated order to reduce order-dependence
-  order_t <- sample(seq_along(idx_t))
+  # Randomise treated order to reduce order-dependence.
+  # Use seed if supplied for reproducibility.
+  if (!is.null(seed)) set.seed(seed)
+  order_t <- sample(seq_len(n_t))
 
   for (i in order_t) {
-    remaining <- setdiff(seq_along(idx_c), matched_c)
-    if (length(remaining) == 0L) break
+    remaining_idx <- which(!matched_c)
+    if (length(remaining_idx) == 0L) break
 
-    dists <- abs(ps_t[i] - ps_c[remaining])
-    best  <- remaining[which.min(dists)]
-    best_dist <- min(dists)
+    dists     <- abs(ps_t[i] - ps_c[remaining_idx])
+    best_pos  <- which.min(dists)           # position within remaining_idx
+    best      <- remaining_idx[best_pos]    # index into idx_c
+    best_dist <- dists[best_pos]
 
     if (!is.null(caliper) && best_dist > caliper) next
 
-    matched_c <- c(matched_c, best)
-    pair_t    <- c(pair_t, idx_t[i])
-    pair_c    <- c(pair_c, idx_c[best])
+    k              <- k + 1L
+    matched_c[best] <- TRUE
+    pair_t[k]      <- idx_t[i]
+    pair_c[k]      <- idx_c[best]
+  }
+
+  # Trim to actual matched count
+  if (k > 0L) {
+    pair_t <- pair_t[seq_len(k)]
+    pair_c <- pair_c[seq_len(k)]
+  } else {
+    pair_t <- integer(0)
+    pair_c <- integer(0)
   }
 
   # ---- Build output data frame -------------------------------------------
