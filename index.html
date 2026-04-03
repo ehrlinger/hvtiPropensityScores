@@ -64,6 +64,7 @@
 <!-- badges: start -->
 
 <p>Propensity score methods for cardiac surgery comparative-effectiveness research. Ports the balancing logic from SAS programs into a tidy R API whose outputs are compatible with <a href="https://ehrlinger.github.io/hvtiPlotR/" class="external-link">hvtiPlotR</a> and <a href="https://github.com/ehrlinger/hvtiRutilities" class="external-link">hvtiRutilities</a>.</p>
+<p><strong>Full documentation:</strong> <a href="https://ehrlinger.github.io/hvtiPropensityScores/" class="uri">https://ehrlinger.github.io/hvtiPropensityScores/</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -81,8 +82,11 @@
 <span><span class="co"># Reproducible synthetic dataset</span></span>
 <span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># --- Propensity score estimation ---</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_logistic.html">ps_logistic</a></span><span class="op">(</span><span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>, data <span class="op">=</span> <span class="va">dta</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># --- Nearest-neighbour 1:1 matching ---</span></span>
-<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span><span class="op">)</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">$</span><span class="va">data</span><span class="op">[</span><span class="va">m</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">match</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="op">]</span></span>
@@ -95,6 +99,90 @@
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
 </h2>
+<p><strong>Score estimation</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="reference/ps_logistic.html">ps_logistic()</a></code></td>
+<td>Binary propensity score via logistic regression (with optional MI)</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code></td>
+<td>Ordered treatment propensity via cumulative logit (MASS::polr)</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/ps_nominal.html">ps_nominal()</a></code></td>
+<td>Nominal treatment propensity via generalised logit (nnet::multinom)</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/bs_continuous.html">bs_continuous()</a></code></td>
+<td>Balancing score for continuous exposures via linear regression</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/bs_count.html">bs_count()</a></code></td>
+<td>Balancing score for count exposures via negative-binomial / Poisson</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Balancing methods</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="reference/ps_match.html">ps_match()</a></code></td>
+<td>Greedy nearest-neighbour 1:1 matching with optional caliper</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/ps_weight.html">ps_weight()</a></code></td>
+<td>IPTW weighting — ATE, ATT, or ATC estimand</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sensitivity analysis</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code></td>
+<td>Rosenbaum gamma bounds for matched analyses</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/sa_evalue.html">sa_evalue()</a></code></td>
+<td>E-values (VanderWeele &amp; Ding 2017) for unmeasured confounding</td>
+</tr>
+<tr class="odd">
+<td><code><a href="reference/sa_overlap.html">sa_overlap()</a></code></td>
+<td>PS overlap / positivity diagnostics</td>
+</tr>
+<tr class="even">
+<td><code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code></td>
+<td>IPTW trim-threshold sensitivity sweep</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Utilities</strong></p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -107,17 +195,21 @@
 <tbody>
 <tr class="odd">
 <td><code><a href="reference/sample_ps_data.html">sample_ps_data()</a></code></td>
-<td>Synthetic cardiac-surgery dataset for examples and tests</td>
+<td>Synthetic cardiac-surgery dataset (binary treatment)</td>
 </tr>
 <tr class="even">
-<td><code><a href="reference/ps_match.html">ps_match()</a></code></td>
-<td>Greedy nearest-neighbour 1:1 matching with optional caliper</td>
+<td><code><a href="reference/sample_ps_data_ordinal.html">sample_ps_data_ordinal()</a></code></td>
+<td>Synthetic dataset with ordered treatment</td>
 </tr>
 <tr class="odd">
-<td><code><a href="reference/ps_weight.html">ps_weight()</a></code></td>
-<td>IPTW weighting — ATE, ATT, or ATC estimand</td>
+<td><code><a href="reference/sample_ps_data_nominal.html">sample_ps_data_nominal()</a></code></td>
+<td>Synthetic dataset with nominal treatment</td>
 </tr>
 <tr class="even">
+<td><code><a href="reference/sample_ps_data_count.html">sample_ps_data_count()</a></code></td>
+<td>Synthetic dataset with count exposure</td>
+</tr>
+<tr class="odd">
 <td><code><a href="reference/is_ps_data.html">is_ps_data()</a></code></td>
 <td>Predicate for <code>ps_data</code> objects</td>
 </tr>
