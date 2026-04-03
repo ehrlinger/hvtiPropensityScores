@@ -114,12 +114,32 @@ print(obj)
 summary(obj)
 #> Summary of <ps_weight>
 #> 
+#> Smd unweighted:
+#>                  variable     smd
+#> id                     id  3.4555
+#> age                   age -0.7994
+#> female             female  0.3989
+#> ef                     ef  0.6139
+#> diabetes         diabetes -0.0554
+#> hypertension hypertension -0.0310
+#> match               match      NA
+#> 
+#> Smd weighted:
+#>                  variable     smd
+#> id                     id  3.5007
+#> age                   age  0.1146
+#> female             female -0.0956
+#> ef                     ef -0.0299
+#> diabetes         diabetes -0.0281
+#> hypertension hypertension -0.0987
+#> match               match      NA
+#> 
 #> Group counts:
 #>     group   n
 #> 1 control 200
 #> 2 treated 200
 #> 
-#> Effective N:
+#> Effective n:
 #>     group n_effective
 #> 1 control       127.9
 #> 2 treated       107.6
@@ -130,12 +150,32 @@ obj_att <- ps_weight(dta, estimand = "ATT", stabilise = TRUE)
 summary(obj_att)
 #> Summary of <ps_weight>
 #> 
+#> Smd unweighted:
+#>                  variable     smd
+#> id                     id  3.4555
+#> age                   age -0.7994
+#> female             female  0.3989
+#> ef                     ef  0.6139
+#> diabetes         diabetes -0.0554
+#> hypertension hypertension -0.0310
+#> match               match      NA
+#> 
+#> Smd weighted:
+#>                  variable     smd
+#> id                     id  3.4042
+#> age                   age  0.0736
+#> female             female -0.0987
+#> ef                     ef  0.0306
+#> diabetes         diabetes -0.1246
+#> hypertension hypertension -0.2262
+#> match               match      NA
+#> 
 #> Group counts:
 #>     group   n
 #> 1 control 200
 #> 2 treated 200
 #> 
-#> Effective N:
+#> Effective n:
 #>     group n_effective
 #> 1 control        62.5
 #> 2 treated       200.0

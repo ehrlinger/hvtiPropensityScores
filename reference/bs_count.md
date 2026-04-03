@@ -124,14 +124,61 @@ R package, usually pre-installed). Install with
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# Mirrors the SAS template workflow:
+#   PROC GENMOD dist=nb link=log (negative binomial for overdispersed counts)
+#   xbeta (log-scale linear predictor) used as the balancing score
+#   (not the fitted count -- log scale is more suitable for stratification).
+# The %grp macro binary indicators stra_1 ... stra_k are created when
+# create_binary_strata = TRUE (the default).
+# \donttest{
 dta <- sample_ps_data_count(n = 300, seed = 42)
+
+# Poisson fallback (no MASS dependency)
 obj <- bs_count(
   rbc_tot ~ female + age + diabetes + hypertension,
   data = dta,
-  dist = "poisson"   # or "negbin" if MASS is available
+  dist = "poisson"
 )
 print(obj)
-table(obj$data$cluster)
-} # }
+#> <bs_count>
+#>   N total     : 300
+#>   Outcome     : rbc_tot
+#>   Score col   : bs
+#>   Distribution: poisson
+#>   Strata      : 10 clusters (cluster)
+#>   Method      : balancing-poisson
+#>   Tables      : strata_counts 
+table(obj$data$cluster)    # 10 equal-ish strata by default
+#> 
+#>  1  2  3  4  5  6  7  8  9 10 
+#> 30 30 30 30 30 30 30 30 30 30 
+
+# Binary stratum indicators mirror the SAS %grp macro output
+head(obj$data[, c("id", "bs", "cluster", "stra_1", "stra_2", "stra_10")])
+#>   id        bs cluster stra_1 stra_2 stra_10
+#> 1  1 0.8957304       9      0      0       0
+#> 2  2 0.3222764       3      0      0       0
+#> 3  3 0.6961051       8      0      0       0
+#> 4  4 0.6770635       7      0      0       0
+#> 5  5 0.6753845       7      0      0       0
+#> 6  6 0.5995166       6      0      0       0
+
+# Negative binomial (accounts for overdispersion; requires MASS)
+if (requireNamespace("MASS", quietly = TRUE)) {
+  obj_nb <- bs_count(
+    rbc_tot ~ female + age + diabetes + hypertension,
+    data = dta,
+    dist = "negbin"
+  )
+  print(obj_nb)
+}
+#> <bs_count>
+#>   N total     : 300
+#>   Outcome     : rbc_tot
+#>   Score col   : bs
+#>   Distribution: negbin
+#>   Strata      : 10 clusters (cluster)
+#>   Method      : balancing-negbin
+#>   Tables      : strata_counts 
+# }
 ```

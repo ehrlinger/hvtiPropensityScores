@@ -124,6 +124,32 @@ print(obj)
 summary(obj)
 #> Summary of <ps_match>
 #> 
+#> Smd before:
+#>                  variable     smd
+#> age                   age -0.7994
+#> female             female  0.3989
+#> ef                     ef  0.6139
+#> diabetes         diabetes -0.0554
+#> hypertension hypertension -0.0310
+#> 
+#> Smd after:
+#>                  variable     smd
+#> age                   age -0.7994
+#> female             female  0.3989
+#> ef                     ef  0.6139
+#> diabetes         diabetes -0.0554
+#> hypertension hypertension -0.0310
+#> 
+#> Group counts before:
+#>     group   n
+#> 1 control 200
+#> 2 treated 200
+#> 
+#> Group counts after:
+#>     group   n
+#> 1 control 200
+#> 2 treated 200
+#> 
 
 # 3. Extract the full data (with match indicator)
 head(obj$data)

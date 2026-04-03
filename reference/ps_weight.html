@@ -162,12 +162,32 @@ Default <code>"iptw"</code>.  If the column already exists it is overwritten.</p
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Summary of &lt;ps_weight&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Smd unweighted:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.4555</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age                   age -0.7994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female             female  0.3989</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.6139</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0554</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0310</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Smd weighted:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.5007</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age                   age  0.1146</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female             female -0.0956</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef -0.0299</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0281</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0987</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Effective N:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Effective n:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     group n_effective</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 control       127.9</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated       107.6</span>
@@ -178,12 +198,32 @@ Default <code>"iptw"</code>.  If the column already exists it is overwritten.</p
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">obj_att</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Summary of &lt;ps_weight&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Smd unweighted:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.4555</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age                   age -0.7994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female             female  0.3989</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.6139</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0554</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0310</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Smd weighted:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.4042</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age                   age  0.0736</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female             female -0.0987</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.0306</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.1246</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.2262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Effective N:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Effective n:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     group n_effective</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 control        62.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated       200.0</span>
