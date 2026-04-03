@@ -21,12 +21,19 @@ home:
 
 navbar:
   structure:
+    left:  [intro, articles, reference, news]
     right: [search, github, my_linkedin, lightswitch]
   components:
     my_linkedin:
       icon: fa-linkedin
       href: https://www.linkedin.com/in/ehrlinger/
       aria-label: LinkedIn
+
+articles:
+- title: "Get started"
+  navbar: ~
+  contents:
+  - hvtiPropensityScores
 
 reference:
 - title: "Package Overview"
