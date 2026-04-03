@@ -14,7 +14,7 @@ sa_evalue(
   estimate,
   ci_lo = NULL,
   ci_hi = NULL,
-  type = c("RR", "OR", "HR", "RD"),
+  type = c("RR", "OR", "HR", "IRR", "RD"),
   p0 = NULL
 )
 ```
@@ -37,7 +37,9 @@ sa_evalue(
 
 - type:
 
-  One of `"RR"` (default), `"OR"`, `"HR"`, or `"RD"`.
+  One of `"RR"` (default), `"OR"`, `"HR"`, `"IRR"`, or `"RD"`. `"IRR"`
+  (incidence rate ratio) uses the same formula as `"RR"`; it is provided
+  as a distinct value for clarity in count-outcome studies.
 
 - p0:
 

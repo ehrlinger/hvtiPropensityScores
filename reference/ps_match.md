@@ -16,7 +16,8 @@ ps_match(
   caliper = NULL,
   covariates = NULL,
   match_col = "match",
-  ratio = 1L
+  ratio = 1L,
+  seed = NULL
 )
 ```
 
@@ -61,6 +62,13 @@ ps_match(
 
   Matching ratio (controls : treated). Currently only `1` (1:1) is
   supported. Default `1`.
+
+- seed:
+
+  Integer seed for the random shuffling of treated- patient order that
+  reduces order-dependence. Pass an integer for a reproducible matched
+  set; `NULL` (default) uses the session's current RNG state (not
+  reproducible across sessions).
 
 ## Value
 

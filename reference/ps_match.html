@@ -64,7 +64,8 @@ pre-computed propensity score column.  Returns a <code>ps_match</code> object wh
 <span>  caliper <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  match_col <span class="op">=</span> <span class="st">"match"</span>,</span>
-<span>  ratio <span class="op">=</span> <span class="fl">1L</span></span>
+<span>  ratio <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -113,6 +114,13 @@ overwritten.</p></dd>
 <dt id="arg-ratio">ratio<a class="anchor" aria-label="anchor" href="#arg-ratio"></a></dt>
 <dd><p>Matching ratio (controls : treated).  Currently
 only <code>1</code> (1:1) is supported.  Default <code>1</code>.</p></dd>
+
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Integer seed for the random shuffling of treated-
+patient order that reduces order-dependence.  Pass an integer for a
+reproducible matched set; <code>NULL</code> (default) uses the session's current
+RNG state (not reproducible across sessions).</p></dd>
 
 </dl></div>
     <div class="section level2">

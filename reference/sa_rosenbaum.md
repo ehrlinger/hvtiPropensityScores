@@ -99,10 +99,14 @@ Rosenbaum, P. R. (2002). *Observational Studies* (2nd ed.). Springer.
 ``` r
 dta <- sample_ps_data(n = 300, seed = 1)
 m   <- ps_match(dta)
-if (FALSE) { # \dontrun{
-  # requires rbounds
-  res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
-  res$bounds
-  res$sensitivity_value
-} # }
+res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
+res$bounds
+#>   gamma      p_upper      p_lower reject_upper
+#> 1  1.00 2.764522e-11 2.764522e-11         TRUE
+#> 2  1.25 4.363893e-07 1.110223e-16         TRUE
+#> 3  1.50 1.435190e-04 0.000000e+00         TRUE
+#> 4  1.75 5.254295e-03 0.000000e+00         TRUE
+#> 5  2.00 4.989017e-02 0.000000e+00         TRUE
+res$sensitivity_value
+#> [1] 2
 ```
