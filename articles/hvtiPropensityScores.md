@@ -46,6 +46,7 @@ binary covariates, a fitted propensity score (`prob_t`), and a `match`
 indicator initialised to `0`.
 
 ``` r
+
 dta <- sample_ps_data(n = 500, seed = 42)
 head(dta)
 #>   id tavr      age female       ef diabetes hypertension    prob_t match
@@ -58,6 +59,7 @@ head(dta)
 ```
 
 ``` r
+
 table(dta$tavr)
 #> 
 #>   0   1 
@@ -73,6 +75,7 @@ the raw SMDs are non-trivial and the propensity scores have good
 overlap.
 
 ``` r
+
 hist(
   dta$prob_t,
   breaks = 30,
@@ -97,15 +100,16 @@ matching or weighting.
 fits `stats::glm(..., family = binomial())` and appends several columns
 that mirror the original SAS template output:
 
-| R column   | SAS equivalent     | Description                                             |
-|------------|--------------------|---------------------------------------------------------|
-| `prob_t`   | `_p_` / `_propen_` | Propensity score (probability of treatment)             |
-| `logit_t`  | `_logit_`          | Log-odds: `log(p / (1 - p))`                            |
-| `mt_wt`    | `mt_wt`            | Matching weight `min(p, 1-p) / (p·trt + (1-p)·(1-trt))` |
-| `quintile` | `quintile`         | Rank-based quintile (1–5)                               |
-| `decile`   | `decile`           | Rank-based decile (1–10)                                |
+| R column | SAS equivalent | Description |
+|----|----|----|
+| `prob_t` | `_p_` / `_propen_` | Propensity score (probability of treatment) |
+| `logit_t` | `_logit_` | Log-odds: `log(p / (1 - p))` |
+| `mt_wt` | `mt_wt` | Matching weight `min(p, 1-p) / (p·trt + (1-p)·(1-trt))` |
+| `quintile` | `quintile` | Rank-based quintile (1–5) |
+| `decile` | `decile` | Rank-based decile (1–10) |
 
 ``` r
+
 obj_ps <- ps_logistic(
   tavr ~ age + female + ef + diabetes + hypertension,
   data = sample_ps_data(n = 500, seed = 42)
@@ -126,6 +130,7 @@ or
 [`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md).
 
 ``` r
+
 head(obj_ps$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
                       "quintile", "decile")])
 #>   id tavr    prob_t    logit_t     mt_wt quintile decile
@@ -138,6 +143,7 @@ head(obj_ps$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
 ```
 
 ``` r
+
 m_from_ps <- ps_match(obj_ps$data,
                       score_col = obj_ps$meta$score_col,
                       seed      = 42)
@@ -158,6 +164,7 @@ probabilities with `PROC SUMMARY mean=`. Pass a stacked long-format MI
 data frame and set `imputation_col` to replicate this.
 
 ``` r
+
 dta_base <- sample_ps_data(n = 300, seed = 10)
 
 # Simulate two imputed datasets stacked with an imputation index column
@@ -201,6 +208,7 @@ performs this decomposition internally, appending one `prob_<level>`
 column per level.
 
 ``` r
+
 dta_ord <- sample_ps_data_ordinal(n = 400, seed = 1)
 obj_ord  <- ps_ordinal(
   nyha_grp ~ age + female + ef + diabetes,
@@ -242,6 +250,7 @@ level is the reference category (`REF=first` in SAS); use `ref_level` to
 override.
 
 ``` r
+
 dta_nom <- sample_ps_data_nominal(n = 400, seed = 2)
 obj_nom  <- ps_nominal(
   rtyp ~ age + female + ef + diabetes,
@@ -285,6 +294,7 @@ on nadir HCT). The fitted value from
 [`stats::lm()`](https://rdrr.io/r/stats/lm.html) is used as the score.
 
 ``` r
+
 dta <- sample_ps_data(n = 400, seed = 5)
 obj_bs <- bs_continuous(
   ef ~ age + female + diabetes + hypertension,
@@ -325,6 +335,7 @@ balancing score, not the fitted count — the log scale is continuous and
 unbounded, making it more suitable for rank-based stratification.
 
 ``` r
+
 dta_cnt <- sample_ps_data_count(n = 400, seed = 6)
 
 # Negative binomial to account for overdispersion (SAS dist=nb)
@@ -364,6 +375,7 @@ head(obj_cnt$data[, c("id", "rbc_tot", "bs", "cluster",
 performs greedy 1:1 nearest-neighbour matching without replacement.
 
 ``` r
+
 m <- ps_match(dta)
 print(m)
 #> <ps_match>
@@ -380,6 +392,7 @@ print(m)
 diagnostic tables.
 
 ``` r
+
 summary(m)
 #> Summary of <ps_match>
 #> 
@@ -413,6 +426,7 @@ summary(m)
 The `$tables` slot is a named list you can access directly:
 
 ``` r
+
 m$tables$smd_before
 #>                  variable     smd
 #> age                   age -0.7191
@@ -435,6 +449,7 @@ m$tables$smd_after
 matched pairs. Filter to `match == 1` to obtain the matched subset.
 
 ``` r
+
 matched <- m$data[m$data$match == 1L, ]
 nrow(matched)
 #> [1] 800
@@ -451,6 +466,7 @@ no more than the supplied threshold, reducing the number of matched
 pairs in exchange for tighter balance.
 
 ``` r
+
 m_cal <- ps_match(dta, caliper = 0.05)
 print(m_cal)
 #> <ps_match>
@@ -472,6 +488,7 @@ computes IPTW weights and appends them to `$data`. The default estimand
 is the **average treatment effect** (ATE).
 
 ``` r
+
 w_ate <- ps_weight(dta, estimand = "ATE")
 print(w_ate)
 #> <ps_weight>
@@ -483,6 +500,7 @@ print(w_ate)
 ```
 
 ``` r
+
 summary(w_ate)
 #> Summary of <ps_weight>
 #> 
@@ -520,6 +538,7 @@ summary(w_ate)
 The `iptw` column holds the stabilised weights.
 
 ``` r
+
 head(w_ate$data[, c("id", "tavr", "prob_t", "iptw")])
 #>   id tavr    prob_t      iptw
 #> 1  1    0 0.7308849 1.8579411
@@ -539,6 +558,7 @@ For the **average treatment effect on the treated** (ATT), treated
 patients receive weight `1` and controls receive `ps / (1 - ps)`.
 
 ``` r
+
 w_att <- ps_weight(dta, estimand = "ATT")
 summary(w_att$data$iptw)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
@@ -549,6 +569,7 @@ For the **average treatment effect on the controls** (ATC), the roles
 are reversed.
 
 ``` r
+
 w_atc <- ps_weight(dta, estimand = "ATC")
 summary(w_atc$data$iptw)
 #>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
@@ -561,6 +582,7 @@ Extreme weights can destabilise estimates. Supplying `trim` winsorises
 weights to the (`trim`, `1 - trim`) quantile range.
 
 ``` r
+
 w_trim <- ps_weight(dta, estimand = "ATE", trim = 0.05)
 summary(w_trim$data$iptw)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
@@ -576,6 +598,7 @@ confounding. The four `sa_*` functions quantify how strong an unmeasured
 confounder would need to be to change the study’s conclusions.
 
 ``` r
+
 dta  <- sample_ps_data(n = 500, seed = 42)
 m    <- ps_match(dta, seed = 42)
 w    <- ps_weight(dta, estimand = "ATE")
@@ -590,6 +613,7 @@ reports the common support region, the fraction of each group outside
 it, and near-positivity-violation flags.
 
 ``` r
+
 ov <- sa_overlap(m)
 ov$overlap_region
 #>  lower  upper 
@@ -613,6 +637,7 @@ weight distribution change. Use this to choose a trimming level that
 controls extreme weights without unacceptable loss of sample size.
 
 ``` r
+
 sweep <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))
 head(sweep)
 #>   trim ess_control ess_treated max_weight sd_weight pct_trimmed
@@ -639,6 +664,7 @@ outcome to fully explain away the observed association. A large E-value
 indicates a more robust finding.
 
 ``` r
+
 # Suppose a matched analysis yields RR = 1.8 (95% CI 1.3 to 2.5)
 ev <- sa_evalue(1.8, ci_lo = 1.3, ci_hi = 2.5, type = "RR")
 ev$evalue_estimate   # confounder must be this strong to explain the RR
@@ -648,6 +674,7 @@ ev$evalue_ci         # must be this strong to explain even the CI lower bound
 ```
 
 ``` r
+
 # Risk difference of 0.08 with baseline outcome probability 0.15
 ev_rd <- sa_evalue(0.08, ci_lo = 0.02, ci_hi = 0.14,
                    type = "RD", p0 = 0.15)
@@ -665,6 +692,7 @@ means no hidden bias; the **sensitivity value** is the largest Γ at
 which the analysis remains significant.
 
 ``` r
+
 res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 3, gamma_inc = 0.25)
 
 # Summary: how sensitive is the result?
@@ -695,6 +723,7 @@ The `$data` and `$tables` slots are designed for direct consumption by
 ### 8.1 Mirror histogram (matched)
 
 ``` r
+
 library(hvtiPlotR)
 
 mh <- hv_mirror_hist(
@@ -713,6 +742,7 @@ plot(mh) +
 ### 8.2 Mirror histogram (weighted)
 
 ``` r
+
 mh_wt <- hv_mirror_hist(
   data          = w_ate$data,
   x             = prob_t,
@@ -731,8 +761,9 @@ plot(mh_wt) +
 ## 9 Session info
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.3 (2026-03-11)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -756,8 +787,8 @@ sessionInfo()
 #> [1] hvtiPropensityScores_0.0.0.9000
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] MASS_7.3-65     compiler_4.5.3  fastmap_1.2.0   cli_3.6.5      
-#>  [5] tools_4.5.3     htmltools_0.5.9 otel_0.2.0      nnet_7.3-20    
+#>  [1] MASS_7.3-65     compiler_4.6.1  fastmap_1.2.0   cli_3.6.6      
+#>  [5] tools_4.6.1     htmltools_0.5.9 otel_0.2.0      nnet_7.3-20    
 #>  [9] yaml_2.3.12     rmarkdown_2.31  knitr_1.51      jsonlite_2.0.0 
-#> [13] xfun_0.57       digest_0.6.39   rlang_1.1.7     evaluate_1.0.5
+#> [13] xfun_0.60       digest_0.6.39   rlang_1.3.0     evaluate_1.0.5
 ```

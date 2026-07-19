@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Propensity Score Methods for HVTI CORR Research at the Cleveland Clinic • hvtiPropensityScores</title>
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/Outfit-0.4.10/font.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Outfit-0.4.10/font.css" rel="stylesheet">
 <link href="deps/Fira_Code-0.4.10/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
@@ -105,28 +105,28 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/ps_logistic.html">ps_logistic()</a></code></td>
 <td>Binary propensity score via logistic regression (with optional MI)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code></td>
 <td>Ordered treatment propensity via cumulative logit (MASS::polr)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/ps_nominal.html">ps_nominal()</a></code></td>
 <td>Nominal treatment propensity via generalised logit (nnet::multinom)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/bs_continuous.html">bs_continuous()</a></code></td>
 <td>Balancing score for continuous exposures via linear regression</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/bs_count.html">bs_count()</a></code></td>
 <td>Balancing score for count exposures via negative-binomial / Poisson</td>
 </tr>
@@ -138,16 +138,16 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/ps_match.html">ps_match()</a></code></td>
 <td>Greedy nearest-neighbour 1:1 matching with optional caliper</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/ps_weight.html">ps_weight()</a></code></td>
 <td>IPTW weighting — ATE, ATT, or ATC estimand</td>
 </tr>
@@ -159,24 +159,24 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code></td>
 <td>Rosenbaum gamma bounds for matched analyses</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/sa_evalue.html">sa_evalue()</a></code></td>
 <td>E-values (VanderWeele &amp; Ding 2017) for unmeasured confounding</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/sa_overlap.html">sa_overlap()</a></code></td>
 <td>PS overlap / positivity diagnostics</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code></td>
 <td>IPTW trim-threshold sensitivity sweep</td>
 </tr>
@@ -188,28 +188,28 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/sample_ps_data.html">sample_ps_data()</a></code></td>
 <td>Synthetic cardiac-surgery dataset (binary treatment)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/sample_ps_data_ordinal.html">sample_ps_data_ordinal()</a></code></td>
 <td>Synthetic dataset with ordered treatment</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/sample_ps_data_nominal.html">sample_ps_data_nominal()</a></code></td>
 <td>Synthetic dataset with nominal treatment</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/sample_ps_data_count.html">sample_ps_data_count()</a></code></td>
 <td>Synthetic dataset with count exposure</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/is_ps_data.html">is_ps_data()</a></code></td>
 <td>Predicate for <code>ps_data</code> objects</td>
 </tr>
@@ -258,7 +258,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
