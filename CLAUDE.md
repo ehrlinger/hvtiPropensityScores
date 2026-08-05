@@ -5,11 +5,13 @@ Load this repo's codemap first. It lives in the Obsidian vault under `Claude/rep
 and is read via the `read-codemap` skill (`/codemap <repo>`). Orient on the public API
 surface and where-things-live *before* editing — do not infer structure from a partial
 file read. If the codemap looks stale, say so and offer to refresh it (`/regenerate-codemap`)
-rather than working from a guess.
+rather than working from a guess. If the vault isn't available, say so rather than staying
+quiet about it, then orient from the repo itself — `NAMESPACE` exports, `R/`, the README,
+and the vignette — before editing.
 
 ## Four rules
-1. **Think before coding.** Don't assume — ask. If the request is ambiguous or a name/path/
-   signature is uncertain, surface the confusion instead of running with a guess. One good
+1. **Think before coding.** Don't assume — ask. If the request is ambiguous, or a name, path,
+   or signature is uncertain, surface the confusion instead of running with a guess. One good
    clarifying question beats a confident wrong edit.
 
 2. **Simplicity first.** Write the minimum code that solves the stated problem. No speculative
@@ -38,5 +40,5 @@ rather than working from a guess.
 
 ## Voice
 Prose in vignettes, README, roxygen `@description`/`@details`, and release/post copy follows
-the `ehrlinger-writing` harness — my voice, reader persona, project context. Apply it for any
-documentation text in this repo.
+the `ehrlinger-writing` harness — my voice, reader persona, project context. It's a skill:
+invoke `/ehrlinger-writing` to load it. Apply it for any documentation text in this repo.
