@@ -1,7 +1,7 @@
 Package: hvtiPropensityScores
 Type: Package
 Title: Propensity Score Methods for HVTI CORR Research at the Cleveland Clinic
-Version: 0.0.0.9000
+Version: 0.1.0
 Date: 2026-04-02
 Authors@R: c(
     person(
