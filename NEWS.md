@@ -1,6 +1,6 @@
-# hvtiPropensityScores (development version)
+# hvtiPropensityScores
 
-## hvtiPropensityScores 0.0.0.9000
+## hvtiPropensityScores 0.1.0
 
 * Initial development scaffold.
 * Added `sample_ps_data()` — reproducible synthetic cardiac-surgery dataset.
