@@ -1,1 +1,16 @@
-linters: linters_with_defaults()
+# House lint configuration.
+#
+# line_length 120 rather than lintr's 80: the ps_*() and bs_*() constructors
+# take many named arguments and the calls read better whole than wrapped.
+#
+# indentation_linter and commented_code_linter are off. Both fire heavily on
+# the aligned-argument style used throughout and catch no defect here, and
+# leaving them on buries the linters that do.
+#
+# Everything else is lintr's default and IS enforced -- braces, semicolons,
+# object naming, object usage, trailing blank lines.
+linters: linters_with_defaults(
+    line_length_linter = line_length_linter(120L),
+    indentation_linter = NULL,
+    commented_code_linter = NULL
+  )
