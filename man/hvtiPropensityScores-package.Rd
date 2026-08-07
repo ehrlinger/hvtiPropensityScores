@@ -88,5 +88,10 @@ w <- ps_weight(score$data, score_col = score$meta$score_col)
 \author{
 \strong{Maintainer}: John Ehrlinger \email{ehrlinj@ccf.org}
 
+Authors:
+\itemize{
+  \item John Ehrlinger \email{ehrlinj@ccf.org}
+}
+
 }
 \keyword{internal}
