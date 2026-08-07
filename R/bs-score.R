@@ -368,8 +368,9 @@ bs_count <- function(formula,
   fit_fn <- if (dist == "negbin") {
     function(df) MASS::glm.nb(formula, data = df)
   } else {
-    function(df) stats::glm(formula, data = df,
-                            family = stats::poisson(link = "log"))
+    function(df) {
+      stats::glm(formula, data = df, family = stats::poisson(link = "log"))
+    }
   }
   pred_fn <- function(fit, df) as.numeric(stats::predict(fit, type = "link"))
 

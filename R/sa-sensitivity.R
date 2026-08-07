@@ -200,7 +200,8 @@ sa_rosenbaum <- function(x,
   }
 
   r      <- rank(abs(d_nz))
-  T_plus <- sum(r[d_nz > 0])
+  # Wilcoxon signed-rank statistic T+ (sum of ranks of positive differences)
+  t_plus <- sum(r[d_nz > 0])
 
   # Round to avoid floating-point accumulation: seq(1, 3, 0.25) can produce
   # values like 2.9999999999 instead of 3.0.
@@ -211,8 +212,8 @@ sa_rosenbaum <- function(x,
     mu_lo <- 1 / (1 + g) * n_nz * (n_nz + 1) / 2
     sigma <- sqrt(g * n_nz * (n_nz + 1) * (2 * n_nz + 1) / (6 * (1 + g)^2))
 
-    p_up <- 1 - stats::pnorm((T_plus - 0.5 - mu_hi) / sigma)
-    p_lo <- 1 - stats::pnorm((T_plus - 0.5 - mu_lo) / sigma)
+    p_up <- 1 - stats::pnorm((t_plus - 0.5 - mu_hi) / sigma)
+    p_lo <- 1 - stats::pnorm((t_plus - 0.5 - mu_lo) / sigma)
 
     data.frame(
       gamma        = g,
@@ -550,7 +551,11 @@ sa_overlap <- function(x,
   if (n0 < 2L || n1 < 2L) {
     rlang::warn(
       sprintf(
-        "One or both treatment groups have fewer than 2 patients after removing missing PS values (n_control=%d, n_treated=%d). Overlap diagnostics may be unreliable.",
+        paste0(
+          "One or both treatment groups have fewer than 2 patients after ",
+          "removing missing PS values (n_control=%d, n_treated=%d). ",
+          "Overlap diagnostics may be unreliable."
+        ),
         n0, n1
       )
     )
@@ -777,4 +782,3 @@ sa_trim_sweep <- function(x,
 
   do.call(rbind, rows)
 }
-

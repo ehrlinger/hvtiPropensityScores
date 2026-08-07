@@ -267,8 +267,9 @@ ps_logistic <- function(formula,
   .check_binary(data, treatment_col)
 
   # ---- Fit model(s) and obtain predicted probabilities --------------------
-  fit_fn  <- function(df) stats::glm(formula, data = df,
-                                     family = stats::binomial())
+  fit_fn  <- function(df) {
+    stats::glm(formula, data = df, family = stats::binomial())
+  }
   pred_fn <- function(fit, df) as.numeric(stats::predict(fit, type = "response"))
 
   if (is.null(imputation_col)) {
