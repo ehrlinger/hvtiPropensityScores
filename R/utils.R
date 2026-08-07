@@ -146,11 +146,14 @@
   x0 <- x[treatment == 0 & !is.na(x)]
   x1 <- x[treatment == 1 & !is.na(x)]
 
-  n0 <- length(x0); n1 <- length(x1)
+  n0 <- length(x0)
+  n1 <- length(x1)
   if (n0 < 2L || n1 < 2L) return(NA_real_)
 
-  m0 <- mean(x0);  s0 <- stats::sd(x0)
-  m1 <- mean(x1);  s1 <- stats::sd(x1)
+  m0 <- mean(x0)
+  s0 <- stats::sd(x0)
+  m1 <- mean(x1)
+  s1 <- stats::sd(x1)
 
   # Sample-size-weighted pooled SD (Austin 2009 / Cohen 1988)
   sp <- sqrt(((n0 - 1L) * s0^2 + (n1 - 1L) * s1^2) / (n0 + n1 - 2L))

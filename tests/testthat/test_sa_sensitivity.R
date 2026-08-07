@@ -89,7 +89,8 @@ test_that("sa_evalue() evalue_ci > 1 when CI does not cross null (RR > 1)", {
   res <- sa_evalue(2.5, ci_lo = 1.5, ci_hi = 3.5)
   expect_gt(res$evalue_ci, 1)
   # CI E-value should be based on ci_lo (closer to null for RR > 1)
-  expected <- { rr <- 1.5; rr + sqrt(rr * (rr - 1)) }
+  rr <- 1.5
+  expected <- rr + sqrt(rr * (rr - 1))
   expect_equal(res$evalue_ci, expected, tolerance = 1e-8)
 })
 

@@ -121,7 +121,6 @@ ps_match <- function(data,
   # ---- Split treated / control -------------------------------------------
   trt <- as.integer(data[[treatment_col]])
   ps  <- data[[score_col]]
-  id  <- data[[id_col]]
 
   idx_t <- which(trt == 1L)   # treated rows
   idx_c <- which(trt == 0L)   # control rows

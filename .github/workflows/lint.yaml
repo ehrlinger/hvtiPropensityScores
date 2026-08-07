@@ -22,8 +22,16 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: lintr
+          # local::. installs the package itself, not just its dependencies.
+          # Without it object_usage_linter cannot resolve the package's own
+          # internal functions and reports every call to one as an undefined
+          # global -- 58 phantom lints here, more than the real total.
+          # lintr is version-pinned: a release can add checks to an existing
+          # linter and redden a green build with no change to the code.
+          extra-packages: any::lintr@3.4.0, local::.
 
       - name: Lint
         run: lintr::lint_package()
         shell: Rscript {0}
+        env:
+          LINTR_ERROR_ON_LINT: true
