@@ -1,6 +1,12 @@
-# hvtiPropensityScores
+# hvtiRpropensity
 
-## hvtiPropensityScores 0.1.0
+## hvtiRpropensity 0.1.1
+
+* Renamed from `hvtiPropensityScores` into the `hvtiR*` package family
+  (`hvtiRtemplates`, `hvtiRutilities`, `hvtiRlifetables`, `hvtiRtables`).
+  No user-facing function names or behaviour changed.
+
+## hvtiRpropensity 0.1.0
 
 * Initial development scaffold.
 * Added `sample_ps_data()` — reproducible synthetic cardiac-surgery dataset.

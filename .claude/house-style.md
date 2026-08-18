@@ -6,7 +6,7 @@
   recompose. Editing this file directly will be reverted by the next
   compose and flagged by --check.
 
-  repo:            hvtiPropensityScores
+  repo:            hvtiRpropensity
   profile:         package-internal
   default persona: (a)
   sources:
@@ -16,7 +16,7 @@
     r-package-structure.md         sha256:e64cb6f25dbd
 -->
 
-# House Style — hvtiPropensityScores
+# House Style — hvtiRpropensity
 
 Default reader persona for this repository: **(a)**. Write for one persona at a time.
 
@@ -294,7 +294,7 @@ the reader already stands, and forcing everyone through the same opening
 would flatten a real difference between them:
 
 - *What it is and who it is for* — the reader has already been told to use
-  the package. Current examples: hvtiPlotR, hvtiPropensityScores.
+  the package. Current examples: hvtiPlotR, hvtiRpropensity.
 - *The pain you already have* — the reader still needs convincing to adopt.
   Current example: hvtiRtables.
 - *What works today* — the reader is judging whether the package is ready.
@@ -307,7 +307,7 @@ That part isn't optional across the three.
 nearly everywhere — most of these packages started life as something else.
 Three kinds:
 
-- *SAS-macro port* — hvtiPlotR (`plot.sas`), hvtiPropensityScores,
+- *SAS-macro port* — hvtiPlotR (`plot.sas`), hvtiRpropensity,
   hvtiRutilities (`PROC CONTENTS`, `PROC MEANS`), hvtiRtables (SAS table
   macro).
 - *Upstream fork* — hvtiBoostmtree, forked from `kogalur/boostmtree` at
@@ -562,7 +562,7 @@ report the code clean while the runner disagrees.
 
 `object_usage_linter` needs the package's own namespace to resolve internal
 calls. Without `local::.` it cannot see them and reports every call to one as an
-undefined global. On hvtiPropensityScores that was 58 phantom lints against 12
+undefined global. On hvtiRpropensity that was 58 phantom lints against 12
 real ones — the noise outnumbered the signal five to one.
 
 Worse than the count: the phantoms were *hiding a real finding of the same

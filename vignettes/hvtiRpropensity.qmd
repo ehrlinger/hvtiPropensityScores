@@ -1,5 +1,5 @@
 ---
-title: "Introduction to hvtiPropensityScores"
+title: "Introduction to hvtiRpropensity"
 author: "John Ehrlinger"
 date: today
 format:
@@ -10,7 +10,7 @@ format:
     embed-resources: true
     code-fold: false
 vignette: >
-  %\VignetteIndexEntry{Introduction to hvtiPropensityScores}
+  %\VignetteIndexEntry{Introduction to hvtiRpropensity}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
@@ -24,12 +24,12 @@ knitr::opts_chunk$set(
   fig.width = 7,
   fig.height = 5
 )
-library(hvtiPropensityScores)
+library(hvtiRpropensity)
 ```
 
 ## Overview
 
-`hvtiPropensityScores` provides propensity score methods for cardiac surgery
+`hvtiRpropensity` provides propensity score methods for cardiac surgery
 comparative-effectiveness research.  It ports the balancing logic from six SAS
 templates into a tidy R API compatible with
 [hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/).

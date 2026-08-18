@@ -6,7 +6,7 @@
 ###############################################################################
 
 test_that("new_ps_data() returns correct class vector", {
-  obj <- hvtiPropensityScores:::new_ps_data(
+  obj <- hvtiRpropensity:::new_ps_data(
     data     = data.frame(x = 1),
     meta     = list(method = "test"),
     tables   = list(),
@@ -22,7 +22,7 @@ test_that("new_ps_data() stores data, meta, and tables slots", {
   meta <- list(n_total = 3L, method = "unit_test")
   tbl  <- list(counts = data.frame(n = 3L))
 
-  obj <- hvtiPropensityScores:::new_ps_data(
+  obj <- hvtiRpropensity:::new_ps_data(
     data     = df,
     meta     = meta,
     tables   = tbl,
@@ -35,13 +35,13 @@ test_that("new_ps_data() stores data, meta, and tables slots", {
 
 test_that("new_ps_data() errors on invalid inputs", {
   expect_error(
-    hvtiPropensityScores:::new_ps_data(
+    hvtiRpropensity:::new_ps_data(
       data = list(x = 1),   # not a data.frame
       meta = list(), tables = list(), subclass = "ps_test"
     )
   )
   expect_error(
-    hvtiPropensityScores:::new_ps_data(
+    hvtiRpropensity:::new_ps_data(
       data = data.frame(x = 1), meta = list(), tables = list(),
       subclass = character(0)  # zero-length
     )

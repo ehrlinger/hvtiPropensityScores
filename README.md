@@ -1,9 +1,9 @@
-# hvtiPropensityScores
+# hvtiRpropensity
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/ehrlinger/hvtiPropensityScores/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ehrlinger/hvtiPropensityScores/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/ehrlinger/hvtiPropensityScores/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ehrlinger/hvtiPropensityScores?branch=main)
-[![pkgdown site](https://img.shields.io/badge/docs-pkgdown-blue)](https://ehrlinger.github.io/hvtiPropensityScores/)
+[![R-CMD-check](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/ehrlinger/hvtiRpropensity/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ehrlinger/hvtiRpropensity?branch=main)
+[![pkgdown site](https://img.shields.io/badge/docs-pkgdown-blue)](https://ehrlinger.github.io/hvtiRpropensity/)
 <!-- badges: end -->
 
 Propensity score methods for cardiac surgery comparative-effectiveness
@@ -12,20 +12,20 @@ whose outputs are compatible with
 [hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/) and
 [hvtiRutilities](https://github.com/ehrlinger/hvtiRutilities).
 
-**Full documentation:** <https://ehrlinger.github.io/hvtiPropensityScores/>
+**Full documentation:** <https://ehrlinger.github.io/hvtiRpropensity/>
 
 ## Installation
 
 ```r
 # Install the development version from GitHub:
 # install.packages("pak")
-pak::pak("ehrlinger/hvtiPropensityScores")
+pak::pak("ehrlinger/hvtiRpropensity")
 ```
 
 ## Quick start
 
 ```r
-library(hvtiPropensityScores)
+library(hvtiRpropensity)
 
 # Reproducible synthetic dataset
 dta <- sample_ps_data(n = 500, seed = 42)

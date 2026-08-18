@@ -1,7 +1,7 @@
 ###############################################################################
 ## ps-data.R
 ##
-## Base class infrastructure for hvtiPropensityScores data objects.
+## Base class infrastructure for hvtiRpropensity data objects.
 ##
 ## Every public function in this package returns an object of a specific
 ## subclass (e.g. "ps_match", "ps_weight") that also inherits from the

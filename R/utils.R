@@ -3,7 +3,7 @@
 ##
 ## Internal validation helpers shared across ps_*() constructors.
 ##
-## None of these are exported; they are called as hvtiPropensityScores:::fn()
+## None of these are exported; they are called as hvtiRpropensity:::fn()
 ## in tests that need to exercise them directly.
 ###############################################################################
 
