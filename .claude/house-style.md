@@ -13,7 +13,7 @@
     writing-voice.md               sha256:3018e1e0bf8e
     writing-reader-profile.md      sha256:179212de138c
     writing-context.md             sha256:87d5555936e1
-    r-package-structure.md         sha256:e64cb6f25dbd
+    r-package-structure.md         sha256:0b90e3e645fd
 -->
 
 # House Style — hvtiRpropensity
