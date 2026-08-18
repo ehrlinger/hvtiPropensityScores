@@ -80,11 +80,11 @@ The function reports:
 
 ## See also
 
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md),
-[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md),
-[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_rosenbaum.md),
-[`sa_evalue()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_evalue.md),
-[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_trim_sweep.md)
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
+[`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
+[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
 
 ## Examples
 

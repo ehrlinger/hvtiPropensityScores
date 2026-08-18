@@ -101,8 +101,8 @@ expected by `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()`.
 
 ## See also
 
-[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md),
-[`sample_ps_data()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sample_ps_data.md),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+[`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md),
 `hvtiPlotR::hv_mirror_hist()`, `hvtiPlotR::hv_balance()`
 
 ## Examples

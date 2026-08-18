@@ -85,9 +85,9 @@ Install with `install.packages("MASS")` if missing.
 
 ## See also
 
-[`ps_logistic()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_logistic.md),
-[`ps_nominal()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_nominal.md),
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md)
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+[`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 
 ## Examples
 

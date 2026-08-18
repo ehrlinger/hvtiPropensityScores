@@ -118,8 +118,8 @@ R package, usually pre-installed). Install with
 
 ## See also
 
-[`bs_continuous()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/bs_continuous.md),
-[`ps_logistic()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_logistic.md)
+[`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
 
 ## Examples
 

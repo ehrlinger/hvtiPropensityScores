@@ -3,4 +3,4 @@
 ### Get started
 
 - [Introduction to
-  hvtiPropensityScores](https://ehrlinger.github.io/hvtiPropensityScores/articles/hvtiPropensityScores.md):
+  hvtiRpropensity](https://ehrlinger.github.io/hvtiRpropensity/articles/hvtiRpropensity.md):

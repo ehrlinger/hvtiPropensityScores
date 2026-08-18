@@ -67,12 +67,12 @@ A data frame with `2 * n` rows and the following columns:
 - `match`:
 
   Match indicator, initialised to `0`. Populated by
-  [`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md).
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md).
 
 ## See also
 
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md),
-[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md)
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
 
 ## Examples
 

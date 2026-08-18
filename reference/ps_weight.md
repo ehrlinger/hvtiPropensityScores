@@ -93,8 +93,8 @@ An object of class `c("ps_weight", "ps_data")` with:
 
 ## See also
 
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md),
-[`sample_ps_data()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sample_ps_data.md),
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md),
 `hvtiPlotR::hv_mirror_hist()`, `hvtiPlotR::hv_balance()`
 
 ## Examples

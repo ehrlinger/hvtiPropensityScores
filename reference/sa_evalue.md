@@ -85,9 +85,9 @@ Medicine*, 167(4), 268-274.
 
 ## See also
 
-[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_rosenbaum.md),
-[`sa_overlap()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_overlap.md),
-[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_trim_sweep.md)
+[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
+[`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
 
 ## Examples
 

@@ -26,7 +26,7 @@ sa_rosenbaum(
 - x:
 
   A `ps_match` object (returned by
-  [`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md))
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md))
   **or** a plain data frame whose rows are matched patients.
 
 - outcome_col:
@@ -54,7 +54,7 @@ sa_rosenbaum(
 - pair_id_col:
 
   Name of the pair-ID column created by
-  [`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md).
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md).
   Default `"pair_id"`.
 
 ## Value
@@ -89,10 +89,10 @@ Rosenbaum, P. R. (2002). *Observational Studies* (2nd ed.). Springer.
 
 ## See also
 
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md),
-[`sa_evalue()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_evalue.md),
-[`sa_overlap()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_overlap.md),
-[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_trim_sweep.md)
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
+[`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
 
 ## Examples
 

@@ -102,17 +102,17 @@ The **matching weight** appended as `weight_col` is
 column produced in the SAS templates (Li & Greene, 2013). It is the ATM
 (average treatment effect among the matched) estimand weight and is used
 as input to
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md)
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 or
-[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md).
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md).
 
 ## See also
 
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md),
-[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md),
-[`ps_ordinal()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_ordinal.md),
-[`ps_nominal()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_nominal.md),
-[`sample_ps_data()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sample_ps_data.md)
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+[`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
+[`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
+[`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md)
 
 ## Examples
 

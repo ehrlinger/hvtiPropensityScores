@@ -99,9 +99,9 @@ with `install.packages("nnet")` if missing.
 
 ## See also
 
-[`ps_logistic()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_logistic.md),
-[`ps_ordinal()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_ordinal.md),
-[`ps_match()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_match.md)
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+[`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 
 ## Examples
 

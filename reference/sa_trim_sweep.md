@@ -24,7 +24,7 @@ sa_trim_sweep(
 - x:
 
   A `ps_weight` object (returned by
-  [`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md))
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md))
   **or** a `ps_match` object **or** a plain data frame that contains a
   propensity score column and a binary treatment column.
 
@@ -85,10 +85,10 @@ A data frame with one row per trim value and columns:
 
 ## See also
 
-[`ps_weight()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_weight.md),
-[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_rosenbaum.md),
-[`sa_evalue()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_evalue.md),
-[`sa_overlap()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sa_overlap.md)
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
+[`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
+[`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md)
 
 ## Examples
 

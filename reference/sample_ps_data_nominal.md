@@ -28,7 +28,7 @@ factor), `age`, `female`, `ef`, `diabetes`, `hypertension`.
 
 ## See also
 
-[`ps_nominal()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_nominal.md)
+[`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md)
 
 ## Examples
 

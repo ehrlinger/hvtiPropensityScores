@@ -30,7 +30,7 @@ factor: I \< II \< III), `age`, `female`, `ef`, `diabetes`,
 
 ## See also
 
-[`ps_ordinal()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_ordinal.md)
+[`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
 
 ## Examples
 

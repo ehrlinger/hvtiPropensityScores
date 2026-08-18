@@ -37,8 +37,8 @@ when `n_imputations > 1`.
 
 ## See also
 
-[`bs_count()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/bs_count.md),
-[`bs_continuous()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/bs_continuous.md)
+[`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md),
+[`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md)
 
 ## Examples
 

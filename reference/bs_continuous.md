@@ -105,9 +105,9 @@ within-stratum comparisons less confounded.
 
 ## See also
 
-[`bs_count()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/bs_count.md),
-[`ps_logistic()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/ps_logistic.md),
-[`sample_ps_data()`](https://ehrlinger.github.io/hvtiPropensityScores/reference/sample_ps_data.md)
+[`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md),
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+[`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md)
 
 ## Examples
 
