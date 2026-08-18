@@ -1,4 +1,4 @@
-# codecov.yml — coverage thresholds for hvtiPropensityScores
+# codecov.yml — coverage thresholds for hvtiRpropensity
 #
 # Releases are held to a hard floor; development branches report only.
 

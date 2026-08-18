@@ -8,7 +8,7 @@ vignettes/*.gz
 
 inst/doc
 docs
-hvtiPropensityScores.Rproj
+hvtiRpropensity.Rproj
 
 .claude/*
 !.claude/house-style.md

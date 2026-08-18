@@ -1,10 +1,10 @@
 ###############################################################################
 ## help.R
 ##
-## Package-level documentation for hvtiPropensityScores.
+## Package-level documentation for hvtiRpropensity.
 ###############################################################################
 
-#' hvtiPropensityScores: Propensity Score Methods for Cardiac Surgery Studies
+#' hvtiRpropensity: Propensity Score Methods for Cardiac Surgery Studies
 #'
 #' @description
 #' Provides functions for propensity score and balancing score analysis used
@@ -43,7 +43,7 @@
 #'
 #' @section Typical two-step workflow (binary treatment):
 #' ```r
-#' library(hvtiPropensityScores)
+#' library(hvtiRpropensity)
 #'
 #' # Step 1: estimate propensity score
 #' dta   <- sample_ps_data(n = 500, seed = 42)
@@ -76,7 +76,7 @@
 #' - [sample_ps_data()] — synthetic dataset for examples / tests
 #' - [is_ps_data()] — predicate for `ps_data` objects
 #'
-#' @name hvtiPropensityScores-package
-#' @aliases hvtiPropensityScores
+#' @name hvtiRpropensity-package
+#' @aliases hvtiRpropensity
 #' @keywords internal
 "_PACKAGE"

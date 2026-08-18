@@ -1,3 +1,3 @@
 library(testthat)
 
-test_check("hvtiPropensityScores")
+test_check("hvtiRpropensity")

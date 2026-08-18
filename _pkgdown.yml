@@ -1,4 +1,4 @@
-url: https://ehrlinger.github.io/hvtiPropensityScores/
+url: https://ehrlinger.github.io/hvtiRpropensity/
 template:
   bootstrap: 5
   bslib:
@@ -16,8 +16,8 @@ home:
       badges:
         title: Package badges
         text: |
-          ![](https://img.shields.io/github/r-package/v/ehrlinger/hvtiPropensityScores)<br>
-          ![](https://img.shields.io/github/actions/workflow/status/ehrlinger/hvtiPropensityScores/pkgdown.yaml)<br>
+          ![](https://img.shields.io/github/r-package/v/ehrlinger/hvtiRpropensity)<br>
+          ![](https://img.shields.io/github/actions/workflow/status/ehrlinger/hvtiRpropensity/pkgdown.yaml)<br>
 
 navbar:
   structure:
@@ -33,15 +33,15 @@ articles:
 - title: "Get started"
   navbar: ~
   contents:
-  - hvtiPropensityScores
+  - hvtiRpropensity
 
 reference:
 - title: "Package Overview"
   desc: >
     Package-level documentation and the base S3 class shared by all
-    hvtiPropensityScores data objects.
+    hvtiRpropensity data objects.
   contents:
-  - hvtiPropensityScores-package
+  - hvtiRpropensity-package
   - is_ps_data
 
 - title: "Data"
