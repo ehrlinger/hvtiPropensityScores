@@ -55,30 +55,35 @@ jobs:
           # break this job before the composer ever runs.
           python - <<'PY'
           import os
+          import re
           from pathlib import Path
 
           path = Path(".house-style-tools/repos.yml")
-          lines = path.read_text().splitlines()
+          text = path.read_text()
 
-          index = [i for i, line in enumerate(lines) if line == "  - name: hvtiRpropensity"]
-          if len(index) != 1:
+          entry_pattern = re.compile(
+              r"^  - name: hvtiRpropensity(?:\r?\n)(?:(?!^  - name: ).*(?:\r?\n|$))*",
+              re.MULTILINE,
+          )
+          entry = entry_pattern.search(text)
+          if entry is None:
               raise SystemExit(
                   "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'."
               )
 
-          rewrote_path = False
-          for i in range(index[0] + 1, len(lines)):
-              if lines[i].startswith("  - name: "):
-                  break
-              if lines[i].startswith("    path: "):
-                  lines[i] = f"    path: {os.environ['GITHUB_WORKSPACE']}"
-                  path.write_text("\n".join(lines) + "\n")
-                  rewrote_path = True
-                  break
-          if not rewrote_path:
+          path_pattern = re.compile(r"^(    path: ).*$", re.MULTILINE)
+          if path_pattern.search(entry.group(0)) is None:
               raise SystemExit(
                   "repos.yml entry 'hvtiRpropensity' does not contain a path field."
               )
+
+          workspace = os.environ["GITHUB_WORKSPACE"].replace("'", "''")
+          updated_entry = path_pattern.sub(
+              lambda match: f"{match.group(1)}'{workspace}'",
+              entry.group(0),
+              count=1,
+          )
+          path.write_text(text[: entry.start()] + updated_entry + text[entry.end() :])
           PY
 
       - name: Verify the house style artifact is current
