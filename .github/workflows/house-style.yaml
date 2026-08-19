@@ -59,7 +59,7 @@ jobs:
           from pathlib import Path
 
           path = Path(".house-style-tools/repos.yml")
-          text = path.read_text()
+          text = path.read_text(encoding="utf-8")
           lines = text.splitlines(keepends=True)
 
           entry_pattern = re.compile(r"^\s*-\s+name:\s+hvtiRpropensity\s*(?:\r?\n)?$")
@@ -72,6 +72,8 @@ jobs:
           workspace = os.environ.get("GITHUB_WORKSPACE")
           if not workspace or not workspace.strip():
               raise SystemExit("GITHUB_WORKSPACE is not set.")
+          if "\n" in workspace or "\r" in workspace:
+              raise SystemExit("GITHUB_WORKSPACE must not contain newline characters.")
           workspace = workspace.replace("'", "''")
           next_entry_pattern = re.compile(r"^\s*-\s+name:\s")
           path_pattern = re.compile(r"^(\s+path:\s+).*(\r?\n?)$")
@@ -91,7 +93,7 @@ jobs:
                   "repos.yml entry 'hvtiRpropensity' does not contain a path field."
               )
 
-          path.write_text("".join(lines))
+          path.write_text("".join(lines), encoding="utf-8")
           PY
 
       - name: Verify the house style artifact is current
