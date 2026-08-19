@@ -60,9 +60,7 @@ jobs:
 
           path = Path(".house-style-tools/repos.yml")
           text = path.read_text()
-          lines = re.findall(r".*(?:\r?\n|$)", text)
-          if lines and lines[-1] == "":
-              lines.pop()
+          lines = text.splitlines(keepends=True)
 
           entry_pattern = re.compile(r"^\s*-\s+name:\s+hvtiRpropensity\s*(?:\r?\n)?$")
           entry_index = [i for i, line in enumerate(lines) if entry_pattern.match(line)]
@@ -72,7 +70,7 @@ jobs:
               )
 
           workspace = os.environ.get("GITHUB_WORKSPACE")
-          if not workspace:
+          if not workspace or not workspace.strip():
               raise SystemExit("GITHUB_WORKSPACE is not set.")
           workspace = workspace.replace("'", "''")
           next_entry_pattern = re.compile(r"^\s*-\s+name:\s")
