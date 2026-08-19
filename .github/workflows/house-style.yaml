@@ -60,30 +60,37 @@ jobs:
 
           path = Path(".house-style-tools/repos.yml")
           text = path.read_text()
+          lines = re.findall(r".*(?:\r?\n|$)", text)
+          if lines and lines[-1] == "":
+              lines.pop()
 
-          entry_pattern = re.compile(
-              r"^\s*-\s+name:\s+hvtiRpropensity(?:\r?\n)(?:(?!^\s*-\s+name:\s).*(?:\r?\n|$))*",
-              re.MULTILINE,
-          )
-          entry = entry_pattern.search(text)
-          if entry is None:
+          entry_pattern = re.compile(r"^\s*-\s+name:\s+hvtiRpropensity\s*(?:\r?\n)?$")
+          entry_index = [i for i, line in enumerate(lines) if entry_pattern.match(line)]
+          if len(entry_index) != 1:
               raise SystemExit(
                   "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'."
               )
 
-          path_pattern = re.compile(r"^(\s+path:\s+).*$", re.MULTILINE)
-          if path_pattern.search(entry.group(0)) is None:
+          workspace = os.environ["GITHUB_WORKSPACE"].replace("'", "''")
+          next_entry_pattern = re.compile(r"^\s*-\s+name:\s")
+          path_pattern = re.compile(r"^(\s+path:\s+).*(\r?\n?)$")
+
+          rewrote_path = False
+          for i in range(entry_index[0] + 1, len(lines)):
+              if next_entry_pattern.match(lines[i]):
+                  break
+              match = path_pattern.match(lines[i])
+              if match is not None:
+                  lines[i] = f"{match.group(1)}'{workspace}'{match.group(2)}"
+                  rewrote_path = True
+                  break
+
+          if not rewrote_path:
               raise SystemExit(
                   "repos.yml entry 'hvtiRpropensity' does not contain a path field."
               )
 
-          workspace = os.environ["GITHUB_WORKSPACE"].replace("'", "''")
-          updated_entry = path_pattern.sub(
-              lambda match: f"{match.group(1)}'{workspace}'",
-              entry.group(0),
-              count=1,
-          )
-          path.write_text(text[: entry.start()] + updated_entry + text[entry.end() :])
+          path.write_text("".join(lines))
           PY
 
       - name: Verify the house style artifact is current
