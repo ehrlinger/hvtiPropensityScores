@@ -62,7 +62,7 @@ jobs:
           text = path.read_text()
 
           entry_pattern = re.compile(
-              r"^  - name: hvtiRpropensity(?:\r?\n)(?:(?!^  - name: ).*(?:\r?\n|$))*",
+              r"^\s*-\s+name:\s+hvtiRpropensity(?:\r?\n)(?:(?!^\s*-\s+name:\s).*(?:\r?\n|$))*",
               re.MULTILINE,
           )
           entry = entry_pattern.search(text)
@@ -71,7 +71,7 @@ jobs:
                   "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'."
               )
 
-          path_pattern = re.compile(r"^(    path: ).*$", re.MULTILINE)
+          path_pattern = re.compile(r"^(\s+path:\s+).*$", re.MULTILINE)
           if path_pattern.search(entry.group(0)) is None:
               raise SystemExit(
                   "repos.yml entry 'hvtiRpropensity' does not contain a path field."
