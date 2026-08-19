@@ -71,7 +71,10 @@ jobs:
                   "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'."
               )
 
-          workspace = os.environ["GITHUB_WORKSPACE"].replace("'", "''")
+          workspace = os.environ.get("GITHUB_WORKSPACE")
+          if not workspace:
+              raise SystemExit("GITHUB_WORKSPACE is not set.")
+          workspace = workspace.replace("'", "''")
           next_entry_pattern = re.compile(r"^\s*-\s+name:\s")
           path_pattern = re.compile(r"^(\s+path:\s+).*(\r?\n?)$")
 
