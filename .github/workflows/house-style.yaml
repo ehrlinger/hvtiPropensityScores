@@ -66,14 +66,16 @@ jobs:
                   "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'."
               )
 
+          rewrote_path = False
           for i in range(index[0] + 1, len(lines)):
               if lines[i].startswith("  - name: "):
                   break
               if lines[i].startswith("    path: "):
                   lines[i] = f"    path: {os.environ['GITHUB_WORKSPACE']}"
                   path.write_text("\n".join(lines) + "\n")
+                  rewrote_path = True
                   break
-          else:
+          if not rewrote_path:
               raise SystemExit(
                   "repos.yml entry 'hvtiRpropensity' does not contain a path field."
               )
