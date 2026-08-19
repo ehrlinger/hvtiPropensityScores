@@ -53,19 +53,31 @@ jobs:
           # entry at the runner checkout. Match by repo name rather than by a
           # specific workstation path so registry path renames upstream do not
           # break this job before the composer ever runs.
-          Rscript - <<'RS'
-          repos <- yaml::read_yaml(".house-style-tools/repos.yml")
-          repo_names <- vapply(repos$repos, `[[`, character(1), "name")
-          index <- which(repo_names == "hvtiRpropensity")
-          if (length(index) != 1L) {
-            stop(
-              "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'.",
-              call. = FALSE
-            )
-          }
-          repos$repos[[index]]$path <- Sys.getenv("GITHUB_WORKSPACE")
-          yaml::write_yaml(repos, ".house-style-tools/repos.yml")
-          RS
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path(".house-style-tools/repos.yml")
+          lines = path.read_text().splitlines()
+
+          index = [i for i, line in enumerate(lines) if line == "  - name: hvtiRpropensity"]
+          if len(index) != 1:
+              raise SystemExit(
+                  "repos.yml must contain exactly one repo entry named 'hvtiRpropensity'."
+              )
+
+          for i in range(index[0] + 1, len(lines)):
+              if lines[i].startswith("  - name: "):
+                  break
+              if lines[i].startswith("    path: "):
+                  lines[i] = f"    path: {os.environ['GITHUB_WORKSPACE']}"
+                  path.write_text("\n".join(lines) + "\n")
+                  break
+          else:
+              raise SystemExit(
+                  "repos.yml entry 'hvtiRpropensity' does not contain a path field."
+              )
+          PY
 
       - name: Verify the house style artifact is current
         run: |
