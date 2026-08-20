@@ -7,3 +7,5 @@
 ^\.claude$
 ^CLAUDE\.md$
 ^LICENSE\.md$
+^AGENTS\.md$
+^\.lintr$
