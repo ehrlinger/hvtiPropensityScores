@@ -59,16 +59,16 @@ sample_ps_data <- function(n = 500L, seed = 42L, separation = 1.0) {
   n <- as.integer(n)
 
   # Control arm (tavr = 0): older, lower EF
-  age0      <- rnorm(n, mean = 75 + separation * 3, sd = 8)
+  age0      <- stats::rnorm(n, mean = 75 + separation * 3, sd = 8)
   female0   <- stats::rbinom(n, 1, 0.40)
-  ef0       <- rnorm(n, mean = 55 - separation * 3, sd = 10)
+  ef0       <- stats::rnorm(n, mean = 55 - separation * 3, sd = 10)
   diabetes0 <- stats::rbinom(n, 1, 0.30)
   hyp0      <- stats::rbinom(n, 1, 0.65)
 
   # Treatment arm (tavr = 1): younger, higher EF
-  age1      <- rnorm(n, mean = 75 - separation * 3, sd = 8)
+  age1      <- stats::rnorm(n, mean = 75 - separation * 3, sd = 8)
   female1   <- stats::rbinom(n, 1, 0.45)
-  ef1       <- rnorm(n, mean = 55 + separation * 3, sd = 10)
+  ef1       <- stats::rnorm(n, mean = 55 + separation * 3, sd = 10)
   diabetes1 <- stats::rbinom(n, 1, 0.25)
   hyp1      <- stats::rbinom(n, 1, 0.60)
 
@@ -130,23 +130,23 @@ sample_ps_data_ordinal <- function(n = 300L, seed = 42L) {
   n <- as.integer(n)
 
   # NYHA I: younger, higher EF, fewer comorbidities
-  age0      <- rnorm(n, mean = 62, sd = 9)
+  age0      <- stats::rnorm(n, mean = 62, sd = 9)
   female0   <- stats::rbinom(n, 1, 0.38)
-  ef0       <- rnorm(n, mean = 63, sd = 8)
+  ef0       <- stats::rnorm(n, mean = 63, sd = 8)
   diabetes0 <- stats::rbinom(n, 1, 0.18)
   hyp0      <- stats::rbinom(n, 1, 0.50)
 
   # NYHA II: intermediate
-  age1      <- rnorm(n, mean = 68, sd = 9)
+  age1      <- stats::rnorm(n, mean = 68, sd = 9)
   female1   <- stats::rbinom(n, 1, 0.42)
-  ef1       <- rnorm(n, mean = 57, sd = 9)
+  ef1       <- stats::rnorm(n, mean = 57, sd = 9)
   diabetes1 <- stats::rbinom(n, 1, 0.26)
   hyp1      <- stats::rbinom(n, 1, 0.60)
 
   # NYHA III: older, lower EF, more comorbidities
-  age2      <- rnorm(n, mean = 74, sd = 9)
+  age2      <- stats::rnorm(n, mean = 74, sd = 9)
   female2   <- stats::rbinom(n, 1, 0.46)
-  ef2       <- rnorm(n, mean = 49, sd = 10)
+  ef2       <- stats::rnorm(n, mean = 49, sd = 10)
   diabetes2 <- stats::rbinom(n, 1, 0.34)
   hyp2      <- stats::rbinom(n, 1, 0.70)
 
@@ -199,30 +199,30 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
   n <- as.integer(n)
 
   # COS (commissurotomy): younger, lower EF
-  age0      <- rnorm(n, mean = 58, sd = 10)
+  age0      <- stats::rnorm(n, mean = 58, sd = 10)
   female0   <- stats::rbinom(n, 1, 0.55)
-  ef0       <- rnorm(n, mean = 56, sd = 9)
+  ef0       <- stats::rnorm(n, mean = 56, sd = 9)
   diabetes0 <- stats::rbinom(n, 1, 0.20)
   hyp0      <- stats::rbinom(n, 1, 0.48)
 
   # PER (pericardial): intermediate
-  age1      <- rnorm(n, mean = 63, sd = 10)
+  age1      <- stats::rnorm(n, mean = 63, sd = 10)
   female1   <- stats::rbinom(n, 1, 0.48)
-  ef1       <- rnorm(n, mean = 53, sd = 9)
+  ef1       <- stats::rnorm(n, mean = 53, sd = 9)
   diabetes1 <- stats::rbinom(n, 1, 0.25)
   hyp1      <- stats::rbinom(n, 1, 0.55)
 
   # DEV (DeVega): older, lower EF
-  age2      <- rnorm(n, mean = 68, sd = 10)
+  age2      <- stats::rnorm(n, mean = 68, sd = 10)
   female2   <- stats::rbinom(n, 1, 0.44)
-  ef2       <- rnorm(n, mean = 50, sd = 10)
+  ef2       <- stats::rnorm(n, mean = 50, sd = 10)
   diabetes2 <- stats::rbinom(n, 1, 0.30)
   hyp2      <- stats::rbinom(n, 1, 0.62)
 
   # CE (Carpentier-Edwards ring): oldest, more comorbidities
-  age3      <- rnorm(n, mean = 72, sd = 10)
+  age3      <- stats::rnorm(n, mean = 72, sd = 10)
   female3   <- stats::rbinom(n, 1, 0.41)
-  ef3       <- rnorm(n, mean = 48, sd = 11)
+  ef3       <- stats::rnorm(n, mean = 48, sd = 11)
   diabetes3 <- stats::rbinom(n, 1, 0.35)
   hyp3      <- stats::rbinom(n, 1, 0.68)
 
@@ -288,12 +288,12 @@ sample_ps_data_count <- function(n = 500L, seed = 42L, n_imputations = 1L) {
 
   .one_dataset <- function(seed_offset = 0L) {
     set.seed(seed + seed_offset)
-    age          <- rnorm(n, mean = 68, sd = 10)
+    age          <- stats::rnorm(n, mean = 68, sd = 10)
     female       <- stats::rbinom(n, 1, 0.40)
     diabetes     <- stats::rbinom(n, 1, 0.28)
     hypertension <- stats::rbinom(n, 1, 0.60)
-    hct_pr       <- rnorm(n, mean = 39, sd = 5)    # pre-op haematocrit
-    cpb_time     <- rnorm(n, mean = 90, sd = 30)   # bypass minutes
+    hct_pr       <- stats::rnorm(n, mean = 39, sd = 5)    # pre-op haematocrit
+    cpb_time     <- stats::rnorm(n, mean = 90, sd = 30)   # bypass minutes
 
     # Log-linear mean for RBC: more units for anaemic, long bypass, older
     log_mu <- 0.5 +
