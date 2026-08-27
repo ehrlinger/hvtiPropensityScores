@@ -120,8 +120,8 @@ original dataset with score / weight columns appended, and whose
 
 ## Author
 
-**Maintainer**: John Ehrlinger <ehrlinj@ccf.org>
+**Maintainer**: John Ehrlinger <john.ehrlinger@gmail.com>
 
 Authors:
 
-- John Ehrlinger <ehrlinj@ccf.org>
+- John Ehrlinger <john.ehrlinger@gmail.com>
