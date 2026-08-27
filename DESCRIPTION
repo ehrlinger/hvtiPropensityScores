@@ -1,8 +1,8 @@
 Package: hvtiRpropensity
 Type: Package
 Title: Propensity Score Methods for HVTI CORR Research at the Cleveland Clinic
-Version: 0.1.1
-Date: 2026-04-02
+Version: 0.1.2
+Date: 2026-08-27
 Authors@R: c(
     person(
       "John", "Ehrlinger",
@@ -25,7 +25,8 @@ Description: Propensity score estimation, matching, and inverse-probability
 Depends:
     R (>= 4.1.0)
 Imports:
-    rlang (>= 1.0.0)
+    rlang (>= 1.0.0),
+    stats
 Suggests:
     knitr,
     MASS,

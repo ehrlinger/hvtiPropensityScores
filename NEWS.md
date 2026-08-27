@@ -1,5 +1,13 @@
 # hvtiRpropensity
 
+## hvtiRpropensity 0.1.2
+
+* Qualified the `rnorm()` calls in the `sample_ps_data*()` generators as
+  `stats::rnorm()`, matching every other statistics call in the package, and
+  declared `stats` under `Imports`. This clears the `R CMD check` note about
+  an undefined global function. Generated data is unchanged — the seeds and
+  the RNG draw order are identical.
+
 ## hvtiRpropensity 0.1.1
 
 * Renamed from `hvtiPropensityScores` into the `hvtiR*` package family
