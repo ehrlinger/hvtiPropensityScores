@@ -6,11 +6,6 @@ Propensity-score analysis for the HVTI CORR group: score estimation
 sensitivity methods (`sa_rosenbaum()`, `sa_evalue()`, `sa_overlap()`,
 `sa_trim_sweep()`), plus synthetic data generators. Sixteen exports.
 
-⚠️ **The package is `hvtiRpropensity`; the repository is `hvtiPropensityScores`.** They do
-not match, and one of exactly two such mismatches in the family — `hvtiverse`'s registry
-stores the mapping rather than deriving it. Use the package name in code and the repo name in
-a URL.
-
 This file is the operational contract and applies in full. It is tool neutral, so Codex and
 any other agent read the same rules. Claude Code affordances live in `CLAUDE.md`, which
 imports this file.
@@ -56,7 +51,7 @@ imports this file.
   heavily on the aligned-argument style and catch no defect here. Everything else is lintr's
   default and **is** enforced.
 - **Test files are `test_*.R` with an underscore, and the runner is `tests/test-all.R`.**
-  ⚠️ This matches `hvtiPlotR` and differs from `hvtiRutilities`, `hvtiRdatasets`,
+  ⚠️ This matches `hvtiPlotR` and differs from `hvtiRutilities`, `hvtiRdatabuild`,
   `hvtiRtables` and `hvtiRbootstrap`, which use `test-*.R` and `tests/testthat.R`.
 - **`sa_rosenbaum()` requires `rbounds`; the other three sensitivity methods do not.** Keep it
   that way — `sa_evalue()` is deliberately dependency-free, and adding a hard dependency to
@@ -81,7 +76,7 @@ imports this file.
 - **Never push to `main`.** Branch, then open a PR and let the maintainer merge.
 - **`main` is protected by a GitHub ruleset, and nothing in this repo records that.** A clone
   shows no trace of it, so it is stated here. The ruleset is named `protect main`, is
-  identical across all twelve hvtiverse repositories, and enforces four rules on the default
+  identical across the hvtiR family repositories, and enforces four rules on the default
   branch: no deletion, no force-push, pull-request-only, and an **automatic Copilot code
   review** on every PR. A rejected push comes from the server, not a local hook.
   ⚠️ It currently requires **zero approvals**. `require_code_owner_review` is set but inert
