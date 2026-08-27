@@ -5,6 +5,7 @@
 ^docs$
 ^codecov\.yml$
 ^\.claude$
+^\.remember$
 ^CLAUDE\.md$
 ^LICENSE\.md$
 ^AGENTS\.md$

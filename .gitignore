@@ -12,6 +12,7 @@ hvtiRpropensity.Rproj
 
 .claude/*
 !.claude/house-style.md
+.remember/
 .Rcheck*
 .Rproj.user
 .Rhistory
