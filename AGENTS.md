@@ -17,12 +17,6 @@ and four sensitivity methods
 [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)),
 plus synthetic data generators. Sixteen exports.
 
-⚠️ **The package is `hvtiRpropensity`; the repository is
-`hvtiPropensityScores`.** They do not match, and one of exactly two such
-mismatches in the family — `hvtiverse`’s registry stores the mapping
-rather than deriving it. Use the package name in code and the repo name
-in a URL.
-
 This file is the operational contract and applies in full. It is tool
 neutral, so Codex and any other agent read the same rules. Claude Code
 affordances live in `CLAUDE.md`, which imports this file.
@@ -79,8 +73,8 @@ affordances live in `CLAUDE.md`, which imports this file.
   enforced.
 - **Test files are `test_*.R` with an underscore, and the runner is
   `tests/test-all.R`.** ⚠️ This matches `hvtiPlotR` and differs from
-  `hvtiRutilities`, `hvtiRdatasets`, `hvtiRtables` and `hvtiRbootstrap`,
-  which use `test-*.R` and `tests/testthat.R`.
+  `hvtiRutilities`, `hvtiRdatabuild`, `hvtiRtables` and
+  `hvtiRbootstrap`, which use `test-*.R` and `tests/testthat.R`.
 - **[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
   requires `rbounds`; the other three sensitivity methods do not.** Keep
   it that way —
@@ -112,11 +106,11 @@ affordances live in `CLAUDE.md`, which imports this file.
   maintainer merge.
 - **`main` is protected by a GitHub ruleset, and nothing in this repo
   records that.** A clone shows no trace of it, so it is stated here.
-  The ruleset is named `protect main`, is identical across all twelve
-  hvtiverse repositories, and enforces four rules on the default branch:
-  no deletion, no force-push, pull-request-only, and an **automatic
-  Copilot code review** on every PR. A rejected push comes from the
-  server, not a local hook. ⚠️ It currently requires **zero approvals**.
+  The ruleset is named `protect main`, is identical across the hvtiR
+  family repositories, and enforces four rules on the default branch: no
+  deletion, no force-push, pull-request-only, and an **automatic Copilot
+  code review** on every PR. A rejected push comes from the server, not
+  a local hook. ⚠️ It currently requires **zero approvals**.
   `require_code_owner_review` is set but inert because no repository in
   the family has a `CODEOWNERS` file, so a PR can merge unreviewed.
 - Versions are **straight three digits** (`0.1.1`). Never a `.9000`
