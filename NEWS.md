@@ -1,6 +1,17 @@
-# hvtiRpropensity
+# hvtiRpropensity (unreleased)
 
-## hvtiRpropensity 0.1.3
+* Fixes an empty changelog on the pkgdown site. `NEWS.md` opened with a bare
+  `# hvtiRpropensity` title line, so level one was the title level and every
+  version heading sat at level two. pkgdown reads the top heading level in the
+  file as the version level, found no versions there, and warned "no version
+  headings found" on every build. That title line is removed and the four
+  version headings are promoted to level one, matching the rest of the family.
+  A level-one heading that names no version, such as the `(unreleased)` one
+  above, is skipped by pkgdown rather than counted, so it does not reintroduce
+  the problem. `utils::news()` was unaffected throughout and still reports the
+  same four versions.
+
+# hvtiRpropensity 0.1.3
 
 * Removed the explicit `Maintainer:` field from `DESCRIPTION` and moved the
   maintainer address to `john.ehrlinger@gmail.com` in `Authors@R`, matching the
@@ -9,7 +20,7 @@
   `R CMD check --as-cran` reported as a note. `Maintainer:` is now derived from
   the `cre` role at build time, so the two cannot drift apart again.
 
-## hvtiRpropensity 0.1.2
+# hvtiRpropensity 0.1.2
 
 * Qualified the `rnorm()` calls in the `sample_ps_data*()` generators as
   `stats::rnorm()`, matching every other statistics call in the package, and
@@ -17,13 +28,13 @@
   an undefined global function. Generated data is unchanged — the seeds and
   the RNG draw order are identical.
 
-## hvtiRpropensity 0.1.1
+# hvtiRpropensity 0.1.1
 
 * Renamed from `hvtiPropensityScores` into the `hvtiR*` package family
   (`hvtiRtemplates`, `hvtiRutilities`, `hvtiRlifetables`, `hvtiRtables`).
   No user-facing function names or behaviour changed.
 
-## hvtiRpropensity 0.1.0
+# hvtiRpropensity 0.1.0
 
 * Initial development scaffold.
 * Added `sample_ps_data()` — reproducible synthetic cardiac-surgery dataset.
