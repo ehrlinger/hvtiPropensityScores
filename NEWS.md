@@ -1,12 +1,15 @@
 # hvtiRpropensity (unreleased)
 
 * Fixes an empty changelog on the pkgdown site. `NEWS.md` opened with a bare
-  `# hvtiRpropensity` title, which made level one the title level and left the
-  version headings at level two. pkgdown reads the top heading level as the
-  version level, so it found no releases at all and warned "no version headings
-  found" on every build. The title is gone and the version headings are at
-  level one, matching the rest of the family. `utils::news()` was unaffected
-  and still reports the same four versions.
+  `# hvtiRpropensity` title line, so level one was the title level and every
+  version heading sat at level two. pkgdown reads the top heading level in the
+  file as the version level, found no versions there, and warned "no version
+  headings found" on every build. That title line is removed and the four
+  version headings are promoted to level one, matching the rest of the family.
+  A level-one heading that names no version, such as the `(unreleased)` one
+  above, is skipped by pkgdown rather than counted, so it does not reintroduce
+  the problem. `utils::news()` was unaffected throughout and still reports the
+  same four versions.
 
 # hvtiRpropensity 0.1.3
 
