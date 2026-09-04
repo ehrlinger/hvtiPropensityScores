@@ -63,7 +63,11 @@
 </h1></div>
 <!-- badges: start -->
 
+<p><a href="https://github.com/ehrlinger/hvtiRpropensity" class="external-link"><img src="https://img.shields.io/github/r-package/v/ehrlinger/hvtiRpropensity" alt="R package version"></a></p>
+<p><a href="https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml" class="external-link"><img src="https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml/badge.svg" alt="lint"></a> <!-- badges: end --></p>
 <p>Propensity score methods for cardiac surgery comparative-effectiveness research. Ports the balancing logic from SAS programs into a tidy R API whose outputs are compatible with <a href="https://ehrlinger.github.io/hvtiPlotR/" class="external-link">hvtiPlotR</a> and <a href="https://github.com/ehrlinger/hvtiRutilities" class="external-link">hvtiRutilities</a>.</p>
+<p><strong>Status: the methods are implemented, the SAS acceptance check is not.</strong> Score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>), both balancing methods (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>) and four sensitivity analyses (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>) are exported and tested.</p>
+<p>What is not yet done is parity. Every test in this package runs against the synthetic generators; no test reproduces a real run of the SAS programs whose balancing logic this ports. Until one does, treat agreement with SAS as unverified rather than assumed.</p>
 <p><strong>Full documentation:</strong> <a href="https://ehrlinger.github.io/hvtiRpropensity/" class="uri">https://ehrlinger.github.io/hvtiRpropensity/</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>

@@ -1,10 +1,37 @@
 # hvtiRpropensity
 
+[![R package
+version](https://img.shields.io/github/r-package/v/ehrlinger/hvtiRpropensity)](https://github.com/ehrlinger/hvtiRpropensity)
+
+[![lint](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml/badge.svg)](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml)
+
 Propensity score methods for cardiac surgery comparative-effectiveness
 research. Ports the balancing logic from SAS programs into a tidy R API
 whose outputs are compatible with
 [hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/) and
 [hvtiRutilities](https://github.com/ehrlinger/hvtiRutilities).
+
+**Status: the methods are implemented, the SAS acceptance check is
+not.** Score estimation
+([`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+[`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
+[`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
+[`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
+[`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md)),
+both balancing methods
+([`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md))
+and four sensitivity analyses
+([`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
+[`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
+[`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md))
+are exported and tested.
+
+What is not yet done is parity. Every test in this package runs against
+the synthetic generators; no test reproduces a real run of the SAS
+programs whose balancing logic this ports. Until one does, treat
+agreement with SAS as unverified rather than assumed.
 
 **Full documentation:** <https://ehrlinger.github.io/hvtiRpropensity/>
 
