@@ -9,6 +9,7 @@
 [![R package version](https://img.shields.io/github/r-package/v/ehrlinger/hvtiRpropensity)](https://github.com/ehrlinger/hvtiRpropensity)
 
 [![lint](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml/badge.svg)](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml)
+<!-- badges: end -->
 
 Propensity score methods for cardiac surgery comparative-effectiveness
 research.  Ports the balancing logic from SAS programs into a tidy R API
