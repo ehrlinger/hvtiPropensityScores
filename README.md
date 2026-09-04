@@ -2,15 +2,30 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/ehrlinger/hvtiRpropensity/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ehrlinger/hvtiRpropensity?branch=main)
-[![pkgdown site](https://img.shields.io/badge/docs-pkgdown-blue)](https://ehrlinger.github.io/hvtiRpropensity/)
-<!-- badges: end -->
+[![Codecov test coverage](https://codecov.io/gh/ehrlinger/hvtiRpropensity/graph/badge.svg)](https://app.codecov.io/gh/ehrlinger/hvtiRpropensity)
+[![active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/badges/latest/active.svg)
+[![pkgdown](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/pkgdown.yaml)
+
+[![R package version](https://img.shields.io/github/r-package/v/ehrlinger/hvtiRpropensity)](https://github.com/ehrlinger/hvtiRpropensity)
+
+[![lint](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml/badge.svg)](https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml)
 
 Propensity score methods for cardiac surgery comparative-effectiveness
 research.  Ports the balancing logic from SAS programs into a tidy R API
 whose outputs are compatible with
 [hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/) and
 [hvtiRutilities](https://github.com/ehrlinger/hvtiRutilities).
+
+**Status: the methods are implemented, the SAS acceptance check is not.**
+Score estimation (`ps_logistic()`, `ps_ordinal()`, `ps_nominal()`,
+`bs_continuous()`, `bs_count()`), both balancing methods (`ps_match()`,
+`ps_weight()`) and four sensitivity analyses (`sa_rosenbaum()`, `sa_evalue()`,
+`sa_overlap()`, `sa_trim_sweep()`) are exported and tested.
+
+What is not yet done is parity. Every test in this package runs against the
+synthetic generators; no test reproduces a real run of the SAS programs whose
+balancing logic this ports. Until one does, treat agreement with SAS as
+unverified rather than assumed.
 
 **Full documentation:** <https://ehrlinger.github.io/hvtiRpropensity/>
 
